@@ -150,8 +150,8 @@ class WP_Options_Importer {
 					$no_autoload = array();
 				}
 
-				echo json_encode( array( 'version' => self::VERSION, 'options' => $export_options, 'no_autoload' => $no_autoload ) );
-
+				$JSON_PRETTY_PRINT = defined( 'JSON_PRETTY_PRINT' ) ? JSON_PRETTY_PRINT : null;
+				echo json_encode( array( 'version' => self::VERSION, 'options' => $export_options, 'no_autoload' => $no_autoload ), $JSON_PRETTY_PRINT );
 			}
 
 			exit;
