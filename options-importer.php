@@ -96,6 +96,16 @@ class WP_Options_Importer {
 		add_action( 'export_filters', array( $this, 'export_filters' ) );
 		add_filter( 'export_args', array( $this, 'export_args' ) );
 		add_action( 'export_wp', array( $this, 'export_wp' ) );
+		add_action( 'admin_init', array( $this, 'register_importer' ) );
+	}
+
+
+	/**
+	 * Register our importer.
+	 *
+	 * @return void
+	 */
+	public function register_importer() {
 		if ( function_exists( 'register_importer' ) ) {
 			register_importer( 'wp-options-import', __( 'Settings', 'wp-options-importer' ), __( 'Import wp_options from a JSON file', 'wp-options-importer' ), array( $this, 'dispatch' ) );
 		}
