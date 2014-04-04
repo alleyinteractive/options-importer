@@ -463,7 +463,7 @@ class WP_Options_Importer {
 				if ( isset( $this->import_data['options'][ $option_name ] ) ) {
 					$option_value = maybe_unserialize( $this->import_data['options'][ $option_name ] );
 					if ( in_array( $option_name, $this->import_data['no_autoload'] ) ) {
-						delete_option( '$option_name' );
+						delete_option( $option_name );
 						add_option( $option_name, $option_value, '', 'no' );
 					} else {
 						update_option( $option_name, $option_value );
