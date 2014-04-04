@@ -410,6 +410,16 @@ class WP_Options_Importer {
 
 
 	/**
+	 * Get an array of blacklisted options which we never want to import.
+	 *
+	 * @return array
+	 */
+	private function get_blacklist_options() {
+		return apply_filters( 'options_import_blacklist', array() );
+	}
+
+
+	/**
 	 * Provide the user with options of which settings to import from the JSON file, pre-selecting
 	 * known options.
 	 *
@@ -417,6 +427,10 @@ class WP_Options_Importer {
 	 */
 	private function pre_import() {
 		$whitelist = $this->get_whitelist_options();
+
+		// Allow others to prevent their options from importing
+		$blacklist = $this->get_blacklist_options();
+
 		?>
 		<style type="text/css">
 		#importing_options {
@@ -495,6 +509,12 @@ class WP_Options_Importer {
 					</thead>
 					<tbody>
 						<?php foreach ( $this->import_data['options'] as $option_name => $option_value ) : ?>
+							<?php
+							// See WP_Options_Importer::import() for an explanation of this.
+							if ( defined( 'WP_OPTION_IMPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_BLACKLIST_REGEX, $option_name ) ) {
+								continue;
+							}
+							?>
 							<tr>
 								<td><input type="checkbox" name="options[]" value="<?php echo esc_attr( $option_name ) ?>" <?php checked( in_array( $option_name, $whitelist ) ) ?> /></td>
 								<td><?php echo esc_html( $option_name ) ?></td>
@@ -564,7 +584,7 @@ class WP_Options_Importer {
 			$hash = '048f8580e913efe41ca7d402cc51e848';
 
 			// Allow others to prevent their options from importing
-			$blacklist = apply_filters( 'options_import_blacklist', array() );
+			$blacklist = $this->get_blacklist_options();
 
 			foreach ( (array) $options_to_import as $option_name ) {
 				if ( isset( $this->import_data['options'][ $option_name ] ) ) {
