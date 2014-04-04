@@ -4,7 +4,7 @@
 	Plugin Name: WP Options Importer
 	Plugin URI: https://github.com/alleyinteractive/options-importer
 	Description: Export and import WordPress Options
-	Version: 1
+	Version: 2
 	Author: Matthew Boynes
 	Author URI: http://www.alleyinteractive.com/
 */
@@ -28,15 +28,47 @@ if ( !class_exists( 'WP_Options_Importer' ) ) :
 
 class WP_Options_Importer {
 
+	/**
+	 * Stores the singleton instance.
+	 *
+	 * @access private
+	 *
+	 * @var object
+	 */
 	private static $instance;
 
+	/**
+	 * The attachment ID.
+	 *
+	 * @access private
+	 *
+	 * @var int
+	 */
 	private $file_id;
 
-	const VERSION = 1;
+	/**
+	 * The plugin version.
+	 */
+	const VERSION = 2;
 
-	private $max_version = 1;
+	/**
+	 * The maximum file version the importer will allow.
+	 *
+	 * @access private
+	 *
+	 * @var int
+	 */
+	private $max_version = 2;
 
+	/**
+	 * Stores the import data from the uploaded file.
+	 *
+	 * @access public
+	 *
+	 * @var array
+	 */
 	public $import_data;
+
 
 	private function __construct() {
 		/* Don't do anything, needs to be initialized via instance() method */
