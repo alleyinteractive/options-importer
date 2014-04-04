@@ -562,8 +562,26 @@ class WP_Options_Importer {
 			$override = ( ! empty( $_POST['settings']['override'] ) && '1' === $_POST['settings']['override'] );
 
 			$hash = '048f8580e913efe41ca7d402cc51e848';
+
+			// Allow others to prevent their options from importing
+			$blacklist = apply_filters( 'options_import_blacklist', array() );
+
 			foreach ( (array) $options_to_import as $option_name ) {
 				if ( isset( $this->import_data['options'][ $option_name ] ) ) {
+					if ( in_array( $option_name, $blacklist ) ) {
+						echo "\n<p>" . sprintf( __( 'Skipped option `%s` because a plugin or theme does not allow it to be imported.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
+						continue;
+					}
+
+					// As an absolute last resort for security purposes, allow an installation to define a regular expression
+					// blacklist. For instance, if you run a multsite installation, you could add in an mu-plugin:
+					// 		define( 'WP_OPTION_IMPORT_BLACKLIST_REGEX', '/^(home|siteurl)$/' );
+					// to ensure that none of your sites could change their own url using this tool.
+					if ( defined( 'WP_OPTION_IMPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_BLACKLIST_REGEX, $option_name ) ) {
+						echo "\n<p>" . sprintf( __( 'Skipped option `%s` because this WordPress installation does not allow it.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
+						continue;
+					}
+
 					if ( ! $override ) {
 						// we're going to use a random hash as our default, to know if something is set or not
 						$old_value = get_option( $option_name, $hash );
