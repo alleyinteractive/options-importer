@@ -386,32 +386,73 @@ class WP_Options_Importer {
 	private function pre_import() {
 		$whitelist = $this->get_whitelist_options();
 		?>
+		<style type="text/css">
+		#importing_options {
+			border-collapse: collapse;
+		}
+		#importing_options th {
+			text-align: left;
+		}
+		#importing_options td, #importing_options th {
+			padding: 5px 10px;
+			border-bottom: 1px solid #dfdfdf;
+		}
+		#importing_options pre {
+			white-space: pre-wrap;
+			max-height: 100px;
+			overflow-y: auto;
+			background: #fff;
+			padding: 5px;
+		}
+		div.error#import_all_warning {
+			margin: 25px 0 5px;
+		}
+		</style>
+		<script type="text/javascript">
+		jQuery( function( $ ) {
+			$('#option_importer_details,#import_all_warning').hide();
+			options_override_all_warning = function() {
+				$('#import_all_warning').toggle( $('input.which-options[value="all"]').is( ':checked' ) && $('#override_current').is( ':checked' ) );
+			};
+			$('.which-options').change( function() {
+				options_override_all_warning();
+				switch ( $(this).val() ) {
+					case 'specific' : $('#option_importer_details').fadeIn(); break;
+					default : $('#option_importer_details').fadeOut(); break;
+				}
+			} );
+			$('#override_current').click( options_override_all_warning );
+			$('#importing_options input:checkbox').each( function() {
+				$(this).data( 'default', $(this).is(':checked') );
+			} );
+			$('.options-bulk-select').click( function( event ) {
+				event.preventDefault();
+				switch ( $(this).data('select') ) {
+					case 'all' : $('#importing_options input:checkbox').prop( 'checked', true ); break;
+					case 'none' : $('#importing_options input:checkbox').prop( 'checked', false ); break;
+					case 'defaults' : $('#importing_options input:checkbox').each( function() { $(this).prop( 'checked', $(this).data( 'default' ) ); } ); break;
+				}
+			} );
+		} );
+		</script>
 		<form action="<?php echo admin_url( 'admin.php?import=wp-options-import&amp;step=2' ); ?>" method="post">
 			<?php wp_nonce_field( 'import-wordpress-settings' ); ?>
 			<input type="hidden" name="import_id" value="<?php echo $this->file_id; ?>" />
 
-			<?php if ( ! empty( $this->import_data['options'] ) ) : ?>
-				<style type="text/css">
-				#importing_options {
-					border-collapse: collapse;
-				}
-				#importing_options th {
-					text-align: left;
-				}
-				#importing_options td, #importing_options th {
-					padding: 5px 10px;
-					border-bottom: 1px solid #dfdfdf;
-				}
-				#importing_options pre {
-					white-space: pre-wrap;
-					max-height: 100px;
-					overflow-y: auto;
-					background: #fff;
-					padding: 5px;
-				}
-				</style>
+			<h3><?php _e( 'What would you like to import?', 'wp-options-importer' ) ?></h3>
+			<p>
+				<label><input type="radio" class="which-options" name="settings[which_options]" value="default" checked="checked" /> <?php _e( 'Default Options' ); ?></label>
+				<br /><label><input type="radio" class="which-options" name="settings[which_options]" value="all" /> <?php _e( 'All Options' ); ?></label>
+				<br /><label><input type="radio" class="which-options" name="settings[which_options]" value="specific" /> <?php _e( 'Specific Options' ); ?></label>
+			</p>
 
-				<h3><?php _e( 'Select options to import', 'wp-options-importer' ); ?></h3>
+			<div id="option_importer_details">
+				<h3><?php _e( 'Select the options to import', 'wp-options-importer' ); ?></h3>
+				<p>
+					<a href="#" class="options-bulk-select" data-select="all"><?php _e( 'Select All', 'wp-options-importer' ); ?></a>
+					| <a href="#" class="options-bulk-select" data-select="none"><?php _e( 'Select None', 'wp-options-importer' ); ?></a>
+					| <a href="#" class="options-bulk-select" data-select="defaults"><?php _e( 'Select Defaults', 'wp-options-importer' ); ?></a>
+				</p>
 				<table id="importing_options">
 					<thead>
 						<tr>
@@ -423,7 +464,7 @@ class WP_Options_Importer {
 					<tbody>
 						<?php foreach ( $this->import_data['options'] as $option_name => $option_value ) : ?>
 							<tr>
-								<td><input type="checkbox" name="options[<?php echo esc_attr( $option_name ) ?>]" value="1" <?php checked( in_array( $option_name, $whitelist ) ) ?> /></td>
+								<td><input type="checkbox" name="options[]" value="<?php echo esc_attr( $option_name ) ?>" <?php checked( in_array( $option_name, $whitelist ) ) ?> /></td>
 								<td><?php echo esc_html( $option_name ) ?></td>
 								<?php if ( null === $option_value ) : ?>
 									<td><em>null</em></td>
@@ -438,8 +479,18 @@ class WP_Options_Importer {
 						<?php endforeach; ?>
 					</tbody>
 				</table>
+			</div>
 
-			<?php endif; ?>
+			<h3><?php _e( 'Additional Settings', 'wp-options-importer' ); ?></h3>
+			<p>
+				<input type="checkbox" value="1" name="settings[override]" id="override_current" checked="checked" />
+				<label for="override_current"><?php _e( 'Override existing options', 'wp-options-importer' ); ?></label>
+			</p>
+			<p class="description"><?php _e( 'If you uncheck this box, options will be skipped if they currently exist.', 'wp-options-importer' ); ?></p>
+
+			<div class="error inline" id="import_all_warning">
+				<p class="description"><?php _e( 'Caution! Importing all options with the override option set could break this site. For instance, it may change the site URL, the active theme, and active plugins. Only proceed if you know exactly what you&#8217;re doing.', 'wp-options-importer' ); ?></p>
+			</div>
 
 			<?php submit_button( __( 'Import Selected Options', 'wp-options-importer' ) ); ?>
 		</form>
@@ -450,17 +501,46 @@ class WP_Options_Importer {
 	/**
 	 * The main controller for the actual import stage.
 	 *
-	 * @param string $file Path to the JSON file for importing
+	 * @param string $file Path to the JSON file for importing.
 	 * @return void
 	 */
 	private function import( $file ) {
 		if ( $this->run_import_check( $file ) ) {
-			if ( empty( $_POST['options'] ) ) {
-				return $this->error_message( __( 'There do not appear to be any options to import. Did you select any?', 'wp-options-importer' ) );
+			if ( empty( $_POST['settings']['which_options'] ) ) {
+				wp_import_cleanup( $this->file_id );
+				return $this->error_message( __( 'The posted data does not appear intact. Please try again.', 'wp-options-importer' ) );
 			}
 
-			foreach ( (array) $_POST['options'] as $option_name => $one ) {
+			$options_to_import = array();
+			if ( 'all' == $_POST['settings']['which_options'] ) {
+				$options_to_import = array_keys( $this->import_data['options'] );
+			} elseif ( 'default' == $_POST['settings']['which_options'] ) {
+				$options_to_import = $this->get_whitelist_options();
+			} elseif ( 'specific' == $_POST['settings']['which_options'] ) {
+				if ( empty( $_POST['options'] ) ) {
+					wp_import_cleanup( $this->file_id );
+					return $this->error_message( __( 'There do not appear to be any options to import. Did you select any?', 'wp-options-importer' ) );
+				}
+
+				$options_to_import = $_POST['options'];
+			}
+
+			$override = ( ! empty( $_POST['settings']['override'] ) && '1' === $_POST['settings']['override'] );
+
+			$hash = '048f8580e913efe41ca7d402cc51e848';
+			foreach ( (array) $options_to_import as $option_name ) {
 				if ( isset( $this->import_data['options'][ $option_name ] ) ) {
+					if ( ! $override ) {
+						// we're going to use a random hash as our default, to know if something is set or not
+						$old_value = get_option( $option_name, $hash );
+
+						// only import the setting if it's not present
+						if ( $old_value !== $hash ) {
+							echo "\n<p>" . sprintf( __( 'Skipped option `%s` because it currently exists.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
+							continue;
+						}
+					}
+
 					$option_value = maybe_unserialize( $this->import_data['options'][ $option_name ] );
 					if ( in_array( $option_name, $this->import_data['no_autoload'] ) ) {
 						delete_option( $option_name );
@@ -468,7 +548,7 @@ class WP_Options_Importer {
 					} else {
 						update_option( $option_name, $option_value );
 					}
-				} else {
+				} elseif ( 'specific' == $_POST['settings']['which_options'] ) {
 					echo "\n<p>" . sprintf( __( 'Failed to import option `%s`; it does not appear to be in the import file.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
 				}
 			}
