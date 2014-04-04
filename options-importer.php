@@ -473,6 +473,7 @@ class WP_Options_Importer {
 				}
 			}
 
+			wp_import_cleanup( $this->file_id );
 			echo '<p>' . __( 'That was easy.', 'wp-options-importer' ) . ' <a href="' . admin_url() . '">' . __( 'Have fun!', 'wp-options-importer' ) . '</a>' . '</p>';
 		}
 	}
@@ -502,14 +503,17 @@ class WP_Options_Importer {
 		$file_contents = file_get_contents( $file );
 		$this->import_data = json_decode( $file_contents, true );
 		if ( empty( $this->import_data['version'] ) ) {
+			wp_import_cleanup( $this->file_id );
 			return $this->error_message( __( 'Sorry, there has been an error. This file may not contain data or is corrupt.', 'wp-options-importer' ) );
 		}
 
 		if ( $this->import_data['version'] > $this->max_version ) {
+			wp_import_cleanup( $this->file_id );
 			return $this->error_message( sprintf( __( 'This JSON file (version %s) may not be supported by this version of the importer. Please consider updating.', 'wp-options-importer' ), intval( $this->import_data['version'] ) ) );
 		}
 
 		if ( empty( $this->import_data['options'] ) ) {
+			wp_import_cleanup( $this->file_id );
 			return $this->error_message( __( 'Sorry, there has been an error. This file appears valid, but does not seem to have any options.', 'wp-options-importer' ) );
 		}
 
