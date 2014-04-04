@@ -507,8 +507,9 @@ class WP_Options_Importer {
 	private function import( $file ) {
 		if ( $this->run_import_check( $file ) ) {
 			if ( empty( $_POST['settings']['which_options'] ) ) {
-				wp_import_cleanup( $this->file_id );
-				return $this->error_message( __( 'The posted data does not appear intact. Please try again.', 'wp-options-importer' ) );
+				$this->error_message( __( 'The posted data does not appear intact. Please try again.', 'wp-options-importer' ) );
+				$this->pre_import();
+				return;
 			}
 
 			$options_to_import = array();
@@ -518,8 +519,9 @@ class WP_Options_Importer {
 				$options_to_import = $this->get_whitelist_options();
 			} elseif ( 'specific' == $_POST['settings']['which_options'] ) {
 				if ( empty( $_POST['options'] ) ) {
-					wp_import_cleanup( $this->file_id );
-					return $this->error_message( __( 'There do not appear to be any options to import. Did you select any?', 'wp-options-importer' ) );
+					$this->error_message( __( 'There do not appear to be any options to import. Did you select any?', 'wp-options-importer' ) );
+					$this->pre_import();
+					return;
 				}
 
 				$options_to_import = $_POST['options'];
