@@ -111,7 +111,7 @@ class WP_Options_Importer {
 			if ( ! empty( $sitename ) ) {
 				$sitename .= '.';
 			}
-			$filename = $sitename . 'wordpress.' . date( 'Y-m-d' ) . '.json';
+			$filename = $sitename . 'wp_options.' . date( 'Y-m-d' ) . '.json';
 
 			header( 'Content-Description: File Transfer' );
 			header( 'Content-Disposition: attachment; filename=' . $filename );
