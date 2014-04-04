@@ -265,6 +265,7 @@ class WP_Options_Importer {
 	 */
 	private function get_whitelist_options() {
 		return apply_filters( 'options_import_whitelist', array(
+			// 'active_plugins',
 			'admin_email',
 			'advanced_edit',
 			'avatar_default',
@@ -339,10 +340,10 @@ class WP_Options_Importer {
 			'sidebars_widgets',
 			'start_of_week',
 			'sticky_posts',
-			'stylesheet',
+			// 'stylesheet',
 			'subscription_options',
 			'tag_base',
-			'template',
+			// 'template',
 			'theme_switched',
 			'thread_comments',
 			'thread_comments_depth',
