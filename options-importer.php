@@ -52,13 +52,13 @@ class WP_Options_Importer {
 	const VERSION = 3;
 
 	/**
-	 * The maximum file version the importer will allow.
+	 * The minimum file version the importer will allow.
 	 *
 	 * @access private
 	 *
 	 * @var int
 	 */
-	private $max_version = 2;
+	private $min_version = 2;
 
 	/**
 	 * Stores the import data from the uploaded file.
@@ -223,6 +223,8 @@ class WP_Options_Importer {
 				check_admin_referer( 'import-upload' );
 				if ( $this->handle_upload() ) {
 					$this->pre_import();
+				} else {
+					echo '<p><a href="' . esc_url( admin_url( 'admin.php?import=wp-options-import' ) ) . '">' . __( 'Return to File Upload', 'wp-options-importer' ) . '</a></p>';
 				}
 				break;
 			case 2:
@@ -669,9 +671,14 @@ class WP_Options_Importer {
 			return $this->error_message( __( 'Sorry, there has been an error. This file may not contain data or is corrupt.', 'wp-options-importer' ) );
 		}
 
-		if ( $this->import_data['version'] > $this->max_version ) {
+		if ( $this->import_data['version'] < $this->min_version ) {
 			wp_import_cleanup( $this->file_id );
-			return $this->error_message( sprintf( __( 'This JSON file (version %s) may not be supported by this version of the importer. Please consider updating.', 'wp-options-importer' ), intval( $this->import_data['version'] ) ) );
+			return $this->error_message( sprintf( __( 'This JSON file (version %s) is not supported by this version of the importer. Please update the plugin on the source, or download an older version of the plugin to this installation.', 'wp-options-importer' ), intval( $this->import_data['version'] ) ) );
+		}
+
+		if ( $this->import_data['version'] > self::VERSION ) {
+			wp_import_cleanup( $this->file_id );
+			return $this->error_message( sprintf( __( 'This JSON file (version %s) is from a newer version of this plugin and may not be compatible. Please update this plugin.', 'wp-options-importer' ), intval( $this->import_data['version'] ) ) );
 		}
 
 		if ( empty( $this->import_data['options'] ) ) {
