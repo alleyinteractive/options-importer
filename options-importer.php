@@ -107,25 +107,25 @@ class WP_Options_Importer {
 	 */
 	public function register_importer() {
 		if ( function_exists( 'register_importer' ) ) {
-			register_importer( 'wp-options-import', __( 'Settings', 'wp-options-importer' ), __( 'Import wp_options from a JSON file', 'wp-options-importer' ), array( $this, 'dispatch' ) );
+			register_importer( 'wp-options-import', __( 'Options', 'wp-options-importer' ), __( 'Import wp_options from a JSON file', 'wp-options-importer' ), array( $this, 'dispatch' ) );
 		}
 	}
 
 
 	/**
-	 * Add a radio option to export settings.
+	 * Add a radio option to export options.
 	 *
 	 * @return void
 	 */
 	public function export_filters() {
 		?>
-		<p><label><input type="radio" name="content" value="options" /> <?php _e( 'Settings', 'wp-options-importer' ); ?></label></p>
+		<p><label><input type="radio" name="content" value="options" /> <?php _e( 'Options', 'wp-options-importer' ); ?></label></p>
 		<?php
 	}
 
 
 	/**
-	 * If the user selected that they want to export settings, indicate that in the args and
+	 * If the user selected that they want to export options, indicate that in the args and
 	 * discard anything else. This will get picked up by WP_Options_Importer::export_wp().
 	 *
 	 * @param  array $args The export args being filtered.
@@ -202,7 +202,7 @@ class WP_Options_Importer {
 
 
 	/**
-	 * Registered callback function for the Settings Importer
+	 * Registered callback function for the Options Importer
 	 *
 	 * Manages the three separate stages of the import process.
 	 *
@@ -226,7 +226,7 @@ class WP_Options_Importer {
 				}
 				break;
 			case 2:
-				check_admin_referer( 'import-wordpress-settings' );
+				check_admin_referer( 'import-wordpress-options' );
 				$this->file_id = intval( $_POST['import_id'] );
 				$file = get_attached_file( $this->file_id );
 				$this->import( $file );
@@ -238,18 +238,18 @@ class WP_Options_Importer {
 
 
 	/**
-	 * Start the settings page HTML.
+	 * Start the options import page HTML.
 	 *
 	 * @return void
 	 */
 	private function header() {
 		echo '<div class="wrap">';
-		echo '<h2>' . __( 'Import WordPress Settings', 'wp-options-importer' ) . '</h2>';
+		echo '<h2>' . __( 'Import WordPress Options', 'wp-options-importer' ) . '</h2>';
 	}
 
 
 	/**
-	 * End the settings page HTML.
+	 * End the options import page HTML.
 	 *
 	 * @return void
 	 */
@@ -265,7 +265,7 @@ class WP_Options_Importer {
 	 */
 	private function greet() {
 		echo '<div class="narrow">';
-		echo '<p>'.__( 'Howdy! Upload your WordPress settings JSON file and we&#8217;ll import the desired data. You&#8217;ll have a chance to review the data prior to import.', 'wp-options-importer' ).'</p>';
+		echo '<p>'.__( 'Howdy! Upload your WordPress options JSON file and we&#8217;ll import the desired data. You&#8217;ll have a chance to review the data prior to import.', 'wp-options-importer' ).'</p>';
 		echo '<p>'.__( 'Choose a JSON (.json) file to upload, then click Upload file and import.', 'wp-options-importer' ).'</p>';
 		wp_import_upload_form( 'admin.php?import=wp-options-import&amp;step=1' );
 		echo '</div>';
@@ -430,8 +430,8 @@ class WP_Options_Importer {
 
 
 	/**
-	 * Provide the user with options of which settings to import from the JSON file, pre-selecting
-	 * known options.
+	 * Provide the user with a choice of which options to import from the JSON
+	 * file, pre-selecting known options.
 	 *
 	 * @return void
 	 */
@@ -492,7 +492,7 @@ class WP_Options_Importer {
 		} );
 		</script>
 		<form action="<?php echo admin_url( 'admin.php?import=wp-options-import&amp;step=2' ); ?>" method="post">
-			<?php wp_nonce_field( 'import-wordpress-settings' ); ?>
+			<?php wp_nonce_field( 'import-wordpress-options' ); ?>
 			<input type="hidden" name="import_id" value="<?php echo $this->file_id; ?>" />
 
 			<h3><?php _e( 'What would you like to import?', 'wp-options-importer' ) ?></h3>
