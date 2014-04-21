@@ -4,7 +4,7 @@
 	Plugin Name: WP Options Importer
 	Plugin URI: https://github.com/alleyinteractive/options-importer
 	Description: Export and import WordPress Options
-	Version: 3
+	Version: 4
 	Author: Matthew Boynes
 	Author URI: http://www.alleyinteractive.com/
 */
@@ -47,9 +47,18 @@ class WP_Options_Importer {
 	private $file_id;
 
 	/**
+	 * The transient key template used to store the options after upload.
+	 *
+	 * @access private
+	 *
+	 * @var string
+	 */
+	private $transient_key = 'options-import-%d';
+
+	/**
 	 * The plugin version.
 	 */
-	const VERSION = 3;
+	const VERSION = 4;
 
 	/**
 	 * The minimum file version the importer will allow.
@@ -230,8 +239,9 @@ class WP_Options_Importer {
 			case 2:
 				check_admin_referer( 'import-wordpress-options' );
 				$this->file_id = intval( $_POST['import_id'] );
-				$file = get_attached_file( $this->file_id );
-				$this->import( $file );
+				if ( false !== ( $this->import_data = get_transient( $this->transient_key() ) ) ) {
+					$this->import();
+				}
 				break;
 		}
 
@@ -290,7 +300,7 @@ class WP_Options_Importer {
 			);
 		}
 
-		if ( ! isset( $file['file'] ) ) {
+		if ( ! isset( $file['file'], $file['id'] ) ) {
 			return $this->error_message(
 				__( 'Sorry, there has been an error.', 'wp-options-importer' ),
 				__( 'The file did not upload properly. Please try again.', 'wp-options-importer' )
@@ -298,7 +308,29 @@ class WP_Options_Importer {
 		}
 
 		$this->file_id = intval( $file['id'] );
-		return $this->run_import_check( $file['file'] );
+
+		if ( ! file_exists( $file['file'] ) ) {
+			wp_import_cleanup( $this->file_id );
+			return $this->error_message(
+				__( 'Sorry, there has been an error.', 'wp-options-importer' ),
+				sprintf( __( 'The export file could not be found at <code>%s</code>. It is likely that this was caused by a permissions problem.', 'wp-options-importer' ), esc_html( $file['file'] ) )
+			);
+		}
+
+		if ( ! is_file( $file['file'] ) ) {
+			wp_import_cleanup( $this->file_id );
+			return $this->error_message(
+				__( 'Sorry, there has been an error.', 'wordpress-importer' ),
+				__( 'The path is not a file, please try again.', 'wordpress-importer' )
+			);
+		}
+
+		$file_contents = file_get_contents( $file['file'] );
+		$this->import_data = json_decode( $file_contents, true );
+		set_transient( $this->transient_key(), $this->import_data, DAY_IN_SECONDS );
+		wp_import_cleanup( $this->file_id );
+
+		return $this->run_data_check();
 	}
 
 
@@ -565,11 +597,10 @@ class WP_Options_Importer {
 	/**
 	 * The main controller for the actual import stage.
 	 *
-	 * @param string $file Path to the JSON file for importing.
 	 * @return void
 	 */
-	private function import( $file ) {
-		if ( $this->run_import_check( $file ) ) {
+	private function import() {
+		if ( $this->run_data_check() ) {
 			if ( empty( $_POST['settings']['which_options'] ) ) {
 				$this->error_message( __( 'The posted data does not appear intact. Please try again.', 'wp-options-importer' ) );
 				$this->pre_import();
@@ -637,7 +668,7 @@ class WP_Options_Importer {
 				}
 			}
 
-			wp_import_cleanup( $this->file_id );
+			$this->clean_up();
 			echo '<p>' . __( 'That was easy.', 'wp-options-importer' ) . ' <a href="' . admin_url() . '">' . __( 'Have fun!', 'wp-options-importer' ) . '</a>' . '</p>';
 		}
 	}
@@ -646,47 +677,40 @@ class WP_Options_Importer {
 	/**
 	 * Run a series of checks to ensure we're working with a valid JSON export.
 	 *
-	 * @param  string $file The path to the JSON file.
 	 * @return bool true if the file and data appear valid, false otherwise.
 	 */
-	private function run_import_check( $file ) {
-		if ( ! file_exists( $file ) ) {
-			return $this->error_message(
-				__( 'Sorry, there has been an error.', 'wp-options-importer' ),
-				sprintf( __( 'The export file could not be found at <code>%s</code>. It is likely that this was caused by a permissions problem.', 'wp-options-importer' ), esc_html( $file['file'] ) )
-			);
-		}
-
-		if ( ! is_file( $file ) ) {
-			return $this->error_message(
-				__( 'Sorry, there has been an error.', 'wordpress-importer' ),
-				__( 'The path is not a file, please try again.', 'wordpress-importer' )
-			);
-		}
-
-		$file_contents = file_get_contents( $file );
-		$this->import_data = json_decode( $file_contents, true );
+	private function run_data_check() {
 		if ( empty( $this->import_data['version'] ) ) {
-			wp_import_cleanup( $this->file_id );
+			$this->clean_up();
 			return $this->error_message( __( 'Sorry, there has been an error. This file may not contain data or is corrupt.', 'wp-options-importer' ) );
 		}
 
 		if ( $this->import_data['version'] < $this->min_version ) {
-			wp_import_cleanup( $this->file_id );
+			$this->clean_up();
 			return $this->error_message( sprintf( __( 'This JSON file (version %s) is not supported by this version of the importer. Please update the plugin on the source, or download an older version of the plugin to this installation.', 'wp-options-importer' ), intval( $this->import_data['version'] ) ) );
 		}
 
 		if ( $this->import_data['version'] > self::VERSION ) {
-			wp_import_cleanup( $this->file_id );
+			$this->clean_up();
 			return $this->error_message( sprintf( __( 'This JSON file (version %s) is from a newer version of this plugin and may not be compatible. Please update this plugin.', 'wp-options-importer' ), intval( $this->import_data['version'] ) ) );
 		}
 
 		if ( empty( $this->import_data['options'] ) ) {
-			wp_import_cleanup( $this->file_id );
+			$this->clean_up();
 			return $this->error_message( __( 'Sorry, there has been an error. This file appears valid, but does not seem to have any options.', 'wp-options-importer' ) );
 		}
 
 		return true;
+	}
+
+
+	private function transient_key() {
+		return sprintf( $this->transient_key, $this->file_id );
+	}
+
+
+	private function clean_up() {
+		delete_transient( $this->transient_key() );
 	}
 
 
