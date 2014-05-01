@@ -527,7 +527,7 @@ class WP_Options_Importer {
 		</script>
 		<form action="<?php echo admin_url( 'admin.php?import=wp-options-import&amp;step=2' ); ?>" method="post">
 			<?php wp_nonce_field( 'import-wordpress-options' ); ?>
-			<input type="hidden" name="import_id" value="<?php echo $this->file_id; ?>" />
+			<input type="hidden" name="import_id" value="<?php echo absint( $this->file_id ); ?>" />
 
 			<h3><?php _e( 'What would you like to import?', 'wp-options-importer' ) ?></h3>
 			<p>
