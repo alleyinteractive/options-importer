@@ -3,7 +3,7 @@ Contributors: mboynes,alleyinteractive
 Tags: options, importer, exporter, export, import, migrate, settings, wp_options
 Requires at least: 3.8
 Tested up to: 3.9
-Stable tag: 4
+Stable tag: 5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -35,14 +35,13 @@ or navigate to **Tools &rarr; Import** and choose "Settings" to import options.
 
 == Frequently Asked Questions ==
 
-= When I import the default options, [some plugin]'s settings don't transfer.
-What gives? =
+= When I import the default options, [some plugin]'s settings don't transfer. What gives? =
 
 The default options are core options, or those which a plugin has indicated
 are safe to import. You can choose "Specific Options" when importing to
 manually select those which you need to import.
 
-= I'm the owner of [some plugin]. Can you add my settings to the default list? =
+= I'm the author of [some plugin]. Can you add my settings to the default list? =
 
 No, but you can! We provide a filter, `options_import_whitelist` for you to add
 your options to the default list. Here's an example one might add to their
@@ -64,12 +63,15 @@ would look something like this:
 	}
 	add_filter( 'options_import_blacklist', 'my_awesome_plugin_blacklist_options' );
 
-= I operate a multisite network and [some option or options] should **never**
-be able to be overridden by the site owner. How do I prevent that? =
+= I operate a multisite network and some options should *never* be able to be exported or imported by the site owner. Can I prevent that? =
 
-You have two options. First, you can use the `options_import_blacklist` filter
+You have two options for both exports and imports.
+
+**Imports**
+
+First, you can use the `options_import_blacklist` filter
 and add any options to that array (which is empty by default). If your users
-have access to their theme's code, this isn't 100% safe, because they could
+have access to theme or plugin code, this isn't 100% safe, because they could
 override your blacklist using the same filter. In those cases, there's an
 emergency ripcord where you can disable options from ever being imported. To
 use this, define the constant `WP_OPTION_IMPORT_BLACKLIST_REGEX` (you'll
@@ -77,6 +79,11 @@ probably want to do this in an mu-plugin) and set it to a regular expression.
 Anything matching this expression will be skipped. For example:
 
 	define( 'WP_OPTION_IMPORT_BLACKLIST_REGEX', '/^(home|siteurl)$/' );
+
+**Exports**
+
+Exactly the same as with imports. The filter is `options_export_blacklist`,
+and the constant is `WP_OPTION_EXPORT_BLACKLIST_REGEX`.
 
 
 == Screenshots ==
@@ -90,6 +97,10 @@ everything in the JSON file. Check the box next to those you want included, or
 uncheck those which you don't want to include.
 
 == Changelog ==
+
+= 5 =
+* Added WP_OPTION_EXPORT_BLACKLIST_REGEX
+* Breaking: Changed the `options_export_exclude` filter to `options_export_blacklist` to be consistent with imports.
 
 = 4 =
 * After file upload, store data in transient and immediately delete the file so it doesn't linger on the server.
@@ -107,3 +118,8 @@ uncheck those which you don't want to include.
 
 = 1 =
 * Brand new!
+
+== Upgrade Notice ==
+
+= 5 =
+**Breaking:** Changed the `options_export_exclude` filter to `options_export_blacklist` to be consistent with imports.

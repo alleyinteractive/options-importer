@@ -4,7 +4,7 @@
 	Plugin Name: WP Options Importer
 	Plugin URI: https://github.com/alleyinteractive/options-importer
 	Description: Export and import WordPress Options
-	Version: 4
+	Version: 5
 	Author: Matthew Boynes
 	Author URI: http://www.alleyinteractive.com/
 */
@@ -58,7 +58,7 @@ class WP_Options_Importer {
 	/**
 	 * The plugin version.
 	 */
-	const VERSION = 4;
+	const VERSION = 5;
 
 	/**
 	 * The minimum file version the importer will allow.
@@ -177,15 +177,23 @@ class WP_Options_Importer {
 			$option_names = $wpdb->get_col( "SELECT DISTINCT `option_name` FROM $wpdb->options WHERE `option_name` NOT LIKE '_transient_%' {$multisite_exclude}" );
 			if ( ! empty( $option_names ) ) {
 
-
 				// Allow others to be able to exclude their options from exporting
-				$blacklist = apply_filters( 'options_export_exclude', array() );
+				$blacklist = apply_filters( 'options_export_blacklist', array() );
 
 				$export_options = array();
 				// we're going to use a random hash as our default, to know if something is set or not
 				$hash = '048f8580e913efe41ca7d402cc51e848';
 				foreach ( $option_names as $option_name ) {
 					if ( in_array( $option_name, $blacklist ) ) {
+						continue;
+					}
+
+					// Allow an installation to define a regular expression export blacklist for security purposes. It's entirely possible
+					// that sensitive data might be installed in an option, or you may not want anyone to even know that a key exists.
+					// For instance, if you run a multsite installation, you could add in an mu-plugin:
+					// 		define( 'WP_OPTION_EXPORT_BLACKLIST_REGEX', '/^(mailserver_(login|pass|port|url))$/' );
+					// to ensure that none of your sites could export your mailserver settings.
+					if ( defined( 'WP_OPTION_EXPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_EXPORT_BLACKLIST_REGEX, $option_name ) ) {
 						continue;
 					}
 
