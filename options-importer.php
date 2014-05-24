@@ -669,7 +669,7 @@ class WP_Options_Importer {
 			}
 
 			$this->clean_up();
-			echo '<p>' . __( 'That was easy.', 'wp-options-importer' ) . ' <a href="' . admin_url() . '">' . __( 'Have fun!', 'wp-options-importer' ) . '</a>' . '</p>';
+			echo '<p>' . __( 'All done. That was easy.', 'wp-options-importer' ) . ' <a href="' . admin_url() . '">' . __( 'Have fun!', 'wp-options-importer' ) . '</a>' . '</p>';
 		}
 	}
 
