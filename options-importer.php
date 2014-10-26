@@ -4,7 +4,7 @@
 	Plugin Name: WP Options Importer
 	Plugin URI: https://github.com/alleyinteractive/options-importer
 	Description: Export and import WordPress Options
-	Version: 5
+	Version: 6
 	Author: Matthew Boynes
 	Author URI: http://www.alleyinteractive.com/
 */
@@ -58,7 +58,7 @@ class WP_Options_Importer {
 	/**
 	 * The plugin version.
 	 */
-	const VERSION = 5;
+	const VERSION = 6;
 
 	/**
 	 * The minimum file version the importer will allow.
@@ -168,13 +168,7 @@ class WP_Options_Importer {
 			header( 'Content-Disposition: attachment; filename=' . $filename );
 			header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ), true );
 
-			// Ignore multisite-specific keys
-			$multisite_exclude = '';
-			if ( function_exists( 'is_multisite' ) && is_multisite() ) {
-				$multisite_exclude = $wpdb->prepare( "AND `option_name` NOT LIKE 'wp_%d_%%'", get_current_blog_id() );
-			}
-
-			$option_names = $wpdb->get_col( "SELECT DISTINCT `option_name` FROM $wpdb->options WHERE `option_name` NOT LIKE '_transient_%' {$multisite_exclude}" );
+			$option_names = $wpdb->get_col( "SELECT DISTINCT `option_name` FROM $wpdb->options WHERE `option_name` NOT LIKE '_transient_%'" );
 			if ( ! empty( $option_names ) ) {
 
 				// Allow others to be able to exclude their options from exporting
@@ -204,7 +198,7 @@ class WP_Options_Importer {
 					}
 				}
 
-				$no_autoload = $wpdb->get_col( "SELECT DISTINCT `option_name` FROM $wpdb->options WHERE `option_name` NOT LIKE '_transient_%' {$multisite_exclude} AND `autoload`='no'" );
+				$no_autoload = $wpdb->get_col( "SELECT DISTINCT `option_name` FROM $wpdb->options WHERE `option_name` NOT LIKE '_transient_%' AND `autoload`='no'" );
 				if ( empty( $no_autoload ) ) {
 					$no_autoload = array();
 				}
