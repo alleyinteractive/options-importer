@@ -198,7 +198,7 @@ class WP_Options_Importer {
 					}
 				}
 
-				$no_autoload = $wpdb->get_col( "SELECT DISTINCT `option_name` FROM $wpdb->options WHERE `option_name` NOT LIKE '_transient_%' {$multisite_exclude} AND `autoload`='no'" );
+				$no_autoload = $wpdb->get_col( "SELECT DISTINCT `option_name` FROM $wpdb->options WHERE `option_name` NOT LIKE '_transient_%' AND `autoload`='no'" );
 				if ( empty( $no_autoload ) ) {
 					$no_autoload = array();
 				}
