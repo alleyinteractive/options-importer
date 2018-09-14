@@ -486,8 +486,15 @@ class WP_Options_Importer {
 			text-align: left;
 		}
 		#importing_options td, #importing_options th {
-			padding: 5px 10px;
+			padding: 10px;
 			border-bottom: 1px solid #dfdfdf;
+			word-break: break-all;
+		}
+		#importing_options td.column-value {
+			width: 33%;	
+		}
+		#importing_options td input {
+			margin: 0;
 		}
 		#importing_options pre {
 			white-space: pre-wrap;
@@ -495,6 +502,19 @@ class WP_Options_Importer {
 			overflow-y: auto;
 			background: #fff;
 			padding: 5px;
+			margin: 0;
+		}
+		#importing_options tr td:first-child {
+			border-left: 7px solid #ef5350;
+		}
+		#importing_options tr td:last-child {
+			border-right: 3px solid #ef5350;
+		}
+		#importing_options tr.is-equal td:first-child {
+			border-left-color: #a5d6a7;
+		}
+		#importing_options tr.is-equal td:last-child {
+			border-right-color: #a5d6a7;
 		}
 		div.error#import_all_warning {
 			margin: 25px 0 5px;
@@ -551,6 +571,7 @@ class WP_Options_Importer {
 							<th>&nbsp;</th>
 							<th><?php _e( 'Option Name', 'wp-options-importer' ); ?></th>
 							<th><?php _e( 'New Value', 'wp-options-importer' ) ?></th>
+							<th><?php _e( 'Current Value', 'wp-options-importer' ) ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -560,19 +581,14 @@ class WP_Options_Importer {
 							if ( defined( 'WP_OPTION_IMPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_BLACKLIST_REGEX, $option_name ) ) {
 								continue;
 							}
+							$current_value = maybe_serialize( get_option( $option_name ) );
+							$classname = $option_value == $current_value ? 'is-equal' : null;
 							?>
-							<tr>
+							<tr class="<?php echo $classname ?>">
 								<td><input type="checkbox" name="options[]" value="<?php echo esc_attr( $option_name ) ?>" <?php checked( in_array( $option_name, $whitelist ) ) ?> /></td>
 								<td><?php echo esc_html( $option_name ) ?></td>
-								<?php if ( null === $option_value ) : ?>
-									<td><em>null</em></td>
-								<?php elseif ( '' === $option_value ) : ?>
-									<td><em>empty string</em></td>
-								<?php elseif ( false === $option_value ) : ?>
-									<td><em>false</em></td>
-								<?php else : ?>
-									<td><pre><?php echo esc_html( $option_value ) ?></pre></td>
-								<?php endif ?>
+								<td class="column-value"><?php $this->the_value( $option_value ) ?></td>
+								<td class="column-value"><?php $this->the_value( $current_value ) ?></td>
 							</tr>
 						<?php endforeach; ?>
 					</tbody>
@@ -595,6 +611,23 @@ class WP_Options_Importer {
 		<?php
 	}
 
+	/**
+	 * Print value on screen
+	 *
+	 * @return boolean
+	 */
+	private function the_value( $option_value ) {
+		
+		if ( null === $option_value )
+			echo '<em>null</em>';
+		elseif ( '' === $option_value )
+			echo '<em>empty string</em>';
+		elseif ( false === $option_value )
+			echo '<em>false</em>';
+		else
+			echo '<pre>' . esc_html( $option_value ) . '</pre>';
+		
+	}
 
 	/**
 	 * The main controller for the actual import stage.
