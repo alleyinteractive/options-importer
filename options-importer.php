@@ -505,16 +505,22 @@ class WP_Options_Importer {
 			margin: 0;
 		}
 		#importing_options tr td:first-child {
-			border-left: 7px solid #ef5350;
+			border-left: 3px solid #a5d6a7;
 		}
 		#importing_options tr td:last-child {
-			border-right: 3px solid #ef5350;
+			border-right: 3px solid #a5d6a7;
 		}
-		#importing_options tr.is-equal td:first-child {
-			border-left-color: #a5d6a7;
+		#importing_options tr.not-equal td {
+			background: #fff;
 		}
-		#importing_options tr.is-equal td:last-child {
-			border-right-color: #a5d6a7;
+		#importing_options tr.not-equal pre {
+			border: 1px solid #ddd;
+		}
+		#importing_options tr.not-equal td:first-child {
+			border-left-color: #ef5350;
+		}
+		#importing_options tr.not-equal td:last-child {
+			border-right-color: #ef5350;
 		}
 		div.error#import_all_warning {
 			margin: 25px 0 5px;
@@ -582,7 +588,7 @@ class WP_Options_Importer {
 								continue;
 							}
 							$current_value = maybe_serialize( get_option( $option_name ) );
-							$classname = $option_value == $current_value ? 'is-equal' : null;
+							$classname = $option_value == $current_value ? null : 'not-equal';
 							?>
 							<tr class="<?php echo $classname ?>">
 								<td><input type="checkbox" name="options[]" value="<?php echo esc_attr( $option_name ) ?>" <?php checked( in_array( $option_name, $whitelist ) ) ?> /></td>
