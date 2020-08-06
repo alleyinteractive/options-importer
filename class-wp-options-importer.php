@@ -182,14 +182,14 @@ class WP_Options_Importer {
 			if ( ! empty( $option_names ) ) {
 
 				/**
-				 * Filters options that are in the blocklist to be exported.
+				 * Filters options that are in the denylist to be exported.
 				 *
 				 * @param array The block list options.
 				 */
-				$blocklist = apply_filters( 'options_export_blocklist', array() );
+				$denylist = apply_filters( 'options_export_denylist', array() );
 
 				// Backwards compat for legacy filter name.
-				$blocklist = apply_filters( 'options_export_blacklist', array() );
+				$denylist = apply_filters( 'options_export_blacklist', array() );
 
 				$export_options = array();
 
@@ -198,16 +198,16 @@ class WP_Options_Importer {
 				foreach ( $option_names as $option_name ) {
 
 					// Skip if in the block list.
-					if ( in_array( $option_name, $blocklist, true ) ) {
+					if ( in_array( $option_name, $denylist, true ) ) {
 						continue;
 					}
 
-					// Allow an installation to define a regular expression export blocklist for security purposes. It's entirely possible
+					// Allow an installation to define a regular expression export denylist for security purposes. It's entirely possible
 					// that sensitive data might be installed in an option, or you may not want anyone to even know that a key exists.
 					// For instance, if you run a multsite installation, you could add in an mu-plugin:
-					// define( 'WP_OPTION_EXPORT_BLOCKLIST_REGEX', '/^(mailserver_(login|pass|port|url))$/' );
+					// define( 'WP_OPTION_EXPORT_DENYLIST_REGEX', '/^(mailserver_(login|pass|port|url))$/' );
 					// to ensure that none of your sites could export your mailserver settings.
-					if ( defined( 'WP_OPTION_EXPORT_BLOCKLIST_REGEX' ) && preg_match( WP_OPTION_EXPORT_BLOCKLIST_REGEX, $option_name ) ) {
+					if ( defined( 'WP_OPTION_EXPORT_DENYLIST_REGEX' ) && preg_match( WP_OPTION_EXPORT_DENYLIST_REGEX, $option_name ) ) {
 						continue;
 					}
 
@@ -509,22 +509,22 @@ class WP_Options_Importer {
 
 
 	/**
-	 * Get an array of blocklisted options which we never want to import.
+	 * Get an array of denylist options which we never want to import.
 	 *
-	 * @return array The import blocklist.
+	 * @return array The import denylist.
 	 */
-	private function get_blocklist_options() {
+	private function get_denylist_options() {
 		/**
-		 * Filters the blocklist of options to import.
+		 * Filters the denylist of options to import.
 		 *
-		 * @param array The options blocklist.
+		 * @param array The options denylist.
 		 */
-		$blocklist = apply_filters( 'options_import_blocklist', array() );
+		$denylist = apply_filters( 'options_import_denylist', array() );
 
 		// Backwards compat for legacy filter name.
-		$blocklist = apply_filters( 'options_import_blacklist', array() );
+		$denylist = apply_filters( 'options_import_blacklist', array() );
 
-		return $blocklist;
+		return $denylist;
 	}
 
 
@@ -536,7 +536,7 @@ class WP_Options_Importer {
 		$allowlist = $this->get_allowlist_options();
 
 		// Allow others to prevent their options from importing.
-		$blocklist = $this->get_blocklist_options();
+		$denylist = $this->get_denylist_options();
 
 		?>
 		<style type="text/css">
@@ -618,7 +618,7 @@ class WP_Options_Importer {
 						<?php foreach ( $this->import_data['options'] as $option_name => $option_value ) : ?>
 							<?php
 							// See WP_Options_Importer::import() for an explanation of this.
-							if ( defined( 'WP_OPTION_IMPORT_BLOCKLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_BLOCKLIST_REGEX, $option_name ) ) {
+							if ( defined( 'WP_OPTION_IMPORT_DENYLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_DENYLIST_REGEX, $option_name ) ) {
 								continue;
 							}
 
@@ -696,22 +696,22 @@ class WP_Options_Importer {
 			$hash = '048f8580e913efe41ca7d402cc51e848';
 
 			// Allow others to prevent their options from importing.
-			$blocklist = $this->get_blocklist_options();
+			$denylist = $this->get_denylist_options();
 
 			foreach ( (array) $options_to_import as $option_name ) {
 				if ( isset( $this->import_data['options'][ $option_name ] ) ) {
 
-					if ( in_array( $option_name, $blocklist, true ) ) {
+					if ( in_array( $option_name, $denylist, true ) ) {
 						/* translators: 1. option name */
 						echo "\n<p>" . sprintf( esc_html__( 'Skipped option `%s` because a plugin or theme does not allow it to be imported.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
 						continue;
 					}
 
 					// As an absolute last resort for security purposes, allow an installation to define a regular expression
-					// blocklist. For instance, if you run a multsite installation, you could add in an mu-plugin:
+					// denylist. For instance, if you run a multsite installation, you could add in an mu-plugin:
 					// define( 'WP_OPTION_IMPORT_BLACKLIST_REGEX', '/^(home|siteurl)$/' );
 					// to ensure that none of your sites could change their own url using this tool.
-					if ( defined( 'WP_OPTION_IMPORT_BLOCKLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_BLOCKLIST_REGEX, $option_name ) ) {
+					if ( defined( 'WP_OPTION_IMPORT_DENYLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_DENYLIST_REGEX, $option_name ) ) {
 						/* translators: 1. option name */
 						echo "\n<p>" . sprintf( esc_html__( 'Skipped option `%s` because this WordPress installation does not allow it.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
 						continue;
