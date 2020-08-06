@@ -40,7 +40,7 @@ class WP_Options_Importer {
 	/**
 	 * The plugin version.
 	 */
-	const VERSION = 7;
+	const VERSION = 7.0;
 
 	/**
 	 * The minimum file version the importer will allow.
@@ -357,17 +357,30 @@ class WP_Options_Importer {
 			);
 		}
 
-		$file_contents = wp_remote_get( $file['file'] );
+		// Get the file source URL.
+		$file_url = wp_get_attachment_url( $this->file_id );
+
+		// Unable to get the file URL.
+		if ( empty( $file_url ) ) {
+			wp_import_cleanup( $this->file_id );
+			return $this->error_message(
+				esc_html__( 'Sorry, there has been an error.', 'wordpress-importer' ),
+				esc_html__( 'Unable to fetch the file URL.', 'wordpress-importer' )
+			);
+		}
+
+		$file_contents = wp_remote_get( $file_url );
 
 		// Invalid file or file contents.
 		if ( is_wp_error( $file_contents ) || empty( $file_contents['body'] ) ) {
+			wp_import_cleanup( $this->file_id );
 			return $this->error_message(
 				esc_html__( 'Sorry, there has been an error.', 'wordpress-importer' ),
 				esc_html__( 'Unable to fetch the file contents.', 'wordpress-importer' )
 			);
 		}
 
-		$this->import_data = json_decode( $file_contents, true );
+		$this->import_data = json_decode( $file_contents['body'], true );
 
 		set_transient( $this->transient_key(), $this->import_data, DAY_IN_SECONDS );
 		wp_import_cleanup( $this->file_id );
