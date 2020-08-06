@@ -3,7 +3,7 @@ Contributors: mboynes,alleyinteractive
 Tags: options, importer, exporter, export, import, migrate, settings, wp_options
 Requires at least: 3.8
 Tested up to: 3.9
-Stable tag: 6
+Stable tag: 7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,6 +97,12 @@ everything in the JSON file. Check the box next to those you want included, or
 uncheck those which you don't want to include.
 
 == Changelog ==
+
+= 7 =
+* Use escaped variants of `_e()` and `__()`
+
+= 6 =
+* Remove multisite site-specific exclusions
 
 = 5 =
 * Added WP_OPTION_EXPORT_BLACKLIST_REGEX
