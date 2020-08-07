@@ -194,7 +194,7 @@ class WP_Options_Importer {
 				$denylist = apply_filters( 'options_export_denylist', array() );
 
 				// Backwards compat for legacy filter name.
-				$denylist = apply_filters( 'options_export_blacklist', array() );
+				$denylist = apply_filters( 'options_export_blacklist', $denylist );
 
 				$export_options = array();
 
@@ -552,7 +552,7 @@ class WP_Options_Importer {
 		$denylist = apply_filters( 'options_import_denylist', array() );
 
 		// Backwards compat for legacy filter name.
-		$denylist = apply_filters( 'options_import_blacklist', array() );
+		$denylist = apply_filters( 'options_import_blacklist', $denylist );
 
 		return $denylist;
 	}
