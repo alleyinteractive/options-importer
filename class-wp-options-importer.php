@@ -757,55 +757,12 @@ class WP_Options_Importer {
 
 			$override = ( ! empty( $_POST['settings']['override'] ) && '1' === $_POST['settings']['override'] );
 
-			$hash = '048f8580e913efe41ca7d402cc51e848';
-
-			// Allow others to prevent their options from importing.
-			$denylist = $this->get_denylist_options();
-
 			foreach ( (array) $options_to_import as $option_name ) {
 				if ( isset( $this->import_data['options'][ $option_name ] ) ) {
 
-					if ( in_array( $option_name, $denylist, true ) ) {
-						/* translators: 1. option name */
-						echo "\n<p>" . sprintf( esc_html__( 'Skipped option `%s` because a plugin or theme does not allow it to be imported.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
-						continue;
-					}
+					// Import the option.
+					$this->import_option( $option_name, $override );
 
-					// As an absolute last resort for security purposes, allow an installation to define a regular expression
-					// denylist. For instance, if you run a multsite installation, you could add in an mu-plugin:
-					// define( 'WP_OPTION_IMPORT_BLACKLIST_REGEX', '/^(home|siteurl)$/' );
-					// to ensure that none of your sites could change their own url using this tool.
-					if ( defined( 'WP_OPTION_IMPORT_DENYLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_DENYLIST_REGEX, $option_name ) ) {
-						/* translators: 1. option name */
-						echo "\n<p>" . sprintf( esc_html__( 'Skipped option `%s` because this WordPress installation does not allow it.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
-						continue;
-					}
-
-					// Backwards compat for legacy constant name.
-					if ( defined( 'WP_OPTION_IMPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_BLACKLIST_REGEX, $option_name ) ) {
-						continue;
-					}
-
-					if ( ! $override ) {
-						// We're going to use a random hash as our default, to know if something is set or not.
-						$old_value = get_option( $option_name, $hash );
-
-						// Only import the setting if it's not present.
-						if ( $old_value !== $hash ) {
-							/* translators: 1. option name */
-							echo "\n<p>" . sprintf( esc_html__( 'Skipped option `%s` because it currently exists.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
-							continue;
-						}
-					}
-
-					$option_value = maybe_unserialize( $this->import_data['options'][ $option_name ] );
-
-					if ( in_array( $option_name, $this->import_data['no_autoload'], true ) ) {
-						delete_option( $option_name );
-						add_option( $option_name, $option_value, '', 'no' );
-					} else {
-						update_option( $option_name, $option_value );
-					}
 				} elseif ( 'specific' === $_POST['settings']['which_options'] ) {
 					/* translators: 1. option name */
 					echo "\n<p>" . sprintf( esc_html__( 'Failed to import option `%s`; it does not appear to be in the import file.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
@@ -815,6 +772,71 @@ class WP_Options_Importer {
 			$this->clean_up();
 			echo '<p>' . esc_html__( 'All done. That was easy.', 'wp-options-importer' ) . ' <a href="' . esc_url( admin_url() ) . '">' . esc_html__( 'Have fun!', 'wp-options-importer' ) . '</a></p>';
 		}
+	}
+
+	/**
+	 * Imports an option after perform checks.
+	 *
+	 * @param  string $name     The option name.
+	 * @param  bool   $override Whether or not to override the current option.
+	 * @return bool|\WP_Error   True on success, otherwise a \WP_Error object on failure.
+	 */
+	public function import_option( $name, $override ) {
+		$hash = '048f8580e913efe41ca7d402cc51e848';
+
+		// Allow others to prevent their options from importing.
+		$denylist = $this->get_denylist_options();
+
+		if ( in_array( $name, $denylist, true ) ) {
+			/* translators: 1. option name */
+			return new \WP_Error( 'skipped', sprintf( __( 'Skipped option `%s` because this WordPress installation does not allow it.', 'wp-options-importer' ), $name ) );
+		}
+
+		// As an absolute last resort for security purposes, allow an installation to define a regular expression
+		// denylist. For instance, if you run a multsite installation, you could add in an mu-plugin:
+		// define( 'WP_OPTION_IMPORT_BLACKLIST_REGEX', '/^(home|siteurl)$/' );
+		// to ensure that none of your sites could change their own url using this tool.
+		if (
+			( defined( 'WP_OPTION_IMPORT_DENYLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_DENYLIST_REGEX, $name ) )
+			|| ( defined( 'WP_OPTION_IMPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_BLACKLIST_REGEX, $name ) )
+		) {
+			/* translators: 1. option name */
+			return new \WP_Error( 'skipped', sprintf( __( 'Skipped option `%s` because this WordPress installation does not allow it.', 'wp-options-importer' ), $name ) );
+		}
+
+		if ( ! $override ) {
+			// We're going to use a random hash as our default, to know if something is set or not.
+			$old_value = get_option( $name, $hash );
+
+			// Only import the setting if it's not present.
+			if ( $old_value !== $hash ) {
+				/* translators: 1. option name */
+				return new \WP_Error( 'skipped', sprintf( __( 'Skipped option `%s` because it currently exists.', 'wp-options-importer' ), $name ) );
+			}
+		}
+
+		$option_value = maybe_unserialize( $this->import_data['options'][ $name ] );
+
+		if ( in_array( $name, $this->import_data['no_autoload'], true ) ) {
+
+			if ( false === delete_option( $name ) ) {
+				/* translators: 1. option name */
+				return new \WP_Error( 'error', sprintf( __( 'Failed deleting option `%s`.', 'wp-options-importer' ), $name ) );
+			}
+
+			if ( false === add_option( $name, $option_value, '', 'no' ) ) {
+				/* translators: 1. option name */
+				return new \WP_Error( 'error', sprintf( __( 'Failed adding option `%s`.', 'wp-options-importer' ), $name ) );
+			}
+		} else {
+
+			if ( false === update_option( $name, $option_value ) ) {
+				/* translators: 1. option name */
+				return new \WP_Error( 'error', sprintf( __( 'Failed updating option `%s`.', 'wp-options-importer' ), $name ) );
+			}
+		}
+
+		return true;
 	}
 
 	/**

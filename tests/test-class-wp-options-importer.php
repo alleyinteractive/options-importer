@@ -26,6 +26,28 @@ class WP_Options_Importer_Test extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Tests importing a single option.
+	 */
+	function test_import_option() {
+		$option_name = 'import_option';
+		$option_value = rand_str();
+		WP_Options_Importer::instance()->import_data['options'][ $option_name ] = $option_value;
+		WP_Options_Importer::instance()->import_data['no_autoload'] = [];
+
+		// Import the option.
+		$this->assertTrue( WP_Options_Importer::instance()->import_option( $option_name, true ) );
+		$this->assertEquals( get_option( $option_name ), $option_value );
+
+		add_filter( 'options_import_denylist', function ( $denylist ) { return array_merge( $denylist, array( 'import_option' ) ); } );
+		$this->assertInstanceOf( '\WP_Error', WP_Options_Importer::instance()->import_option( $option_name, true ) );
+
+		// Backwards support for old filter name.
+		add_filter( 'options_import_denylist', '__return_empty_array' );
+		add_filter( 'options_import_blacklist', function ( $denylist ) { return array_merge( $denylist, array( 'import_option' ) ); } );
+		$this->assertInstanceOf( '\WP_Error', WP_Options_Importer::instance()->import_option( $option_name, true ) );
+	}
+
+	/**
 	 * Tests getting the allowlist option names filter.
 	 */
 	function test_get_allowlist_options_filter() {
@@ -41,11 +63,11 @@ class WP_Options_Importer_Test extends WP_UnitTestCase {
 	 * Tests getting the denylist option names filter.
 	 */
 	function test_get_denylist_options_filter() {
-		add_filter( 'options_import_denylist', function ( $allowlist ) { return array_merge( $allowlist, array( 'custom_option_denylist' ) ); } );
+		add_filter( 'options_import_denylist', function ( $denylist ) { return array_merge( $denylist, array( 'custom_option_denylist' ) ); } );
 		$this->assertTrue( in_array( 'custom_option_denylist', WP_Options_Importer::instance()->get_denylist_options(), true ) );
 
 		// Backwards support for old filter name.
-		add_filter( 'options_import_blacklist', function ( $allowlist ) { return array_merge( $allowlist, array( 'custom_option_blacklist' ) ); } );
+		add_filter( 'options_import_blacklist', function ( $denylist ) { return array_merge( $denylist, array( 'custom_option_blacklist' ) ); } );
 		$this->assertTrue( in_array( 'custom_option_blacklist', WP_Options_Importer::instance()->get_denylist_options(), true ) );
 	}
 
