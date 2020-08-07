@@ -2,7 +2,7 @@
 Contributors: mboynes,alleyinteractive
 Tags: options, importer, exporter, export, import, migrate, settings, wp_options
 Requires at least: 3.8
-Tested up to: 5.4
+Tested up to: 5.5
 Stable tag: 7.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
