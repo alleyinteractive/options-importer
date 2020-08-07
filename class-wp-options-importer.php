@@ -177,14 +177,14 @@ class WP_Options_Importer {
 			header( 'Content-Disposition: attachment; filename=' . $filename );
 			header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ), true );
 
-			$option_names = $wpdb->get_col( "SELECT DISTINCT `option_name` FROM $wpdb->options WHERE `option_name` NOT LIKE '_transient_%'" );
+			$option_names = $wpdb->get_col( "SELECT DISTINCT `option_name` FROM $wpdb->options WHERE `option_name` NOT LIKE '_transient_%'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
 			if ( ! empty( $option_names ) ) {
 
 				/**
 				 * Filters options that are in the denylist to be exported.
 				 *
-				 * @param array The block list options.
+				 * @param array The deny list options.
 				 */
 				$denylist = apply_filters( 'options_export_denylist', array() );
 
@@ -197,7 +197,7 @@ class WP_Options_Importer {
 				$hash = '048f8580e913efe41ca7d402cc51e848';
 				foreach ( $option_names as $option_name ) {
 
-					// Skip if in the block list.
+					// Skip if in the deny list.
 					if ( in_array( $option_name, $denylist, true ) ) {
 						continue;
 					}
@@ -224,7 +224,7 @@ class WP_Options_Importer {
 					}
 				}
 
-				$no_autoload = $wpdb->get_col( "SELECT DISTINCT `option_name` FROM $wpdb->options WHERE `option_name` NOT LIKE '_transient_%' AND `autoload`='no'" );
+				$no_autoload = $wpdb->get_col( "SELECT DISTINCT `option_name` FROM $wpdb->options WHERE `option_name` NOT LIKE '_transient_%' AND `autoload`='no'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 
 				if ( empty( $no_autoload ) ) {
 					$no_autoload = array();
@@ -258,7 +258,7 @@ class WP_Options_Importer {
 			$_GET['step'] = 0;
 		}
 
-		switch ( intval( $_GET['step'] ) ) {
+		switch ( intval( $_GET['step'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			case 0:
 				$this->greet();
 				break;
@@ -369,7 +369,11 @@ class WP_Options_Importer {
 			);
 		}
 
-		$file_contents = wp_remote_get( $file_url );
+		if ( function_exists( 'vip_safe_wp_remote_get' ) ) {
+			$file_contents = vip_safe_wp_remote_get( $file_url );
+		} else {
+			$file_contents = wp_remote_get( $file_url ); // phpcs:ignore WordPressVIPMinimum.Functions.RestrictedFunctions.wp_remote_get_wp_remote_get
+		}
 
 		// Invalid file or file contents.
 		if ( is_wp_error( $file_contents ) || empty( $file_contents['body'] ) ) {
@@ -639,6 +643,11 @@ class WP_Options_Importer {
 							if ( defined( 'WP_OPTION_IMPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_BLACKLIST_REGEX, $option_name ) ) {
 								continue;
 							}
+
+							// Skip if this option is in the deny list.
+							if ( in_array( $option_name, $denylist, true ) ) {
+								continue;
+							}
 							?>
 							<tr>
 								<td><input type="checkbox" name="options[]" value="<?php echo esc_attr( $option_name ); ?>" <?php checked( in_array( $option_name, $allowlist, true ) ); ?> /></td>
@@ -669,7 +678,7 @@ class WP_Options_Importer {
 				<p class="description"><?php esc_html_e( 'Caution! Importing all options with the override option set could break this site. For instance, it may change the site URL, the active theme, and active plugins. Only proceed if you know exactly what you&#8217;re doing.', 'wp-options-importer' ); ?></p>
 			</div>
 
-				<?php submit_button( esc_html__( 'Import Selected Options', 'wp-options-importer' ) ); ?>
+			<?php submit_button( esc_html__( 'Import Selected Options', 'wp-options-importer' ) ); ?>
 		</form>
 		<?php
 	}

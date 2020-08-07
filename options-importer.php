@@ -11,7 +11,7 @@
  */
 
 if ( ! class_exists( 'WP_Options_Importer' ) ) {
-	require_once 'class-wp-options-importer.php';
+	require_once dirname( __FILE__ ) . '/class-wp-options-importer.php';
 
 	// Create the singleton instance.
 	WP_Options_Importer::instance();

@@ -19,4 +19,5 @@
 	<exclude-pattern>*/vendor/</exclude-pattern>
 
 	<rule ref="WordPress"></rule>
+	<rule ref="WordPress-VIP-Go"></rule>
 </ruleset>
