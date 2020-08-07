@@ -111,7 +111,7 @@ uncheck those which you don't want to include.
 * Remove multisite site-specific exclusions
 
 = 5 =
-* Added WP_OPTION_EXPORT_DENYLIST_REGEX
+* Added WP_OPTION_EXPORT_BLACKLIST_REGEX
 * Breaking: Changed the `options_export_exclude` filter to `options_export_blacklist` to be consistent with imports.
 
 = 4 =
