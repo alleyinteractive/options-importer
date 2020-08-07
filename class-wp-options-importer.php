@@ -177,7 +177,12 @@ class WP_Options_Importer {
 			header( 'Content-Disposition: attachment; filename=' . $filename );
 			header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ), true );
 
-			$option_names = $wpdb->get_col( "SELECT DISTINCT `option_name` FROM $wpdb->options WHERE `option_name` NOT LIKE '_transient_%'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			$option_names = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+				"SELECT DISTINCT `option_name`
+				FROM $wpdb->options
+				WHERE `option_name` NOT LIKE '_transient_%'
+				AND `option_name` NOT LIKE '_site_transient_%'"
+			);
 
 			if ( ! empty( $option_names ) ) {
 
@@ -224,7 +229,13 @@ class WP_Options_Importer {
 					}
 				}
 
-				$no_autoload = $wpdb->get_col( "SELECT DISTINCT `option_name` FROM $wpdb->options WHERE `option_name` NOT LIKE '_transient_%' AND `autoload`='no'" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+				$no_autoload = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+					"SELECT DISTINCT `option_name`
+					FROM $wpdb->options
+					WHERE `option_name` NOT LIKE '_transient_%'
+					AND `option_name` NOT LIKE '_site__transient_%'
+					AND `autoload`='no'"
+				);
 
 				if ( empty( $no_autoload ) ) {
 					$no_autoload = array();
