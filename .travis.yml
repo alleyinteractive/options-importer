@@ -9,6 +9,7 @@ language: php
 branches:
   only:
     - master
+    - /^release-v.*$/
 
 cache:
   directories:

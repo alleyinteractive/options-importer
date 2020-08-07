@@ -416,7 +416,7 @@ class WP_Options_Importer {
 		 * @param array The allowlist of options to be imported.
 		 */
 		$allowlist = apply_filters(
-			'options_import_whitelist',
+			'options_import_allowlist',
 			array(
 				// 'active_plugins',
 				'admin_email',
@@ -530,7 +530,7 @@ class WP_Options_Importer {
 		);
 
 		// Backwards compat for legacy filter name.
-		$allowlist = apply_filters( 'options_import_blacklist', $allowlist );
+		$allowlist = apply_filters( 'options_import_whitelist', $allowlist );
 
 		return $allowlist;
 	}
