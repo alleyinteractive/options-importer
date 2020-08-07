@@ -438,7 +438,7 @@ class WP_Options_Importer {
 	 *
 	 * @return array
 	 */
-	private function get_allowlist_options() {
+	public function get_allowlist_options() {
 		/**
 		 * Filters the allowed options to be imported.
 		 *
@@ -572,7 +572,7 @@ class WP_Options_Importer {
 	 *
 	 * @return array The import denylist.
 	 */
-	private function get_denylist_options() {
+	public function get_denylist_options() {
 		/**
 		 * Filters the denylist of options to import.
 		 *
