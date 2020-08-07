@@ -177,84 +177,113 @@ class WP_Options_Importer {
 			header( 'Content-Disposition: attachment; filename=' . $filename );
 			header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ), true );
 
-			$option_names = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-				"SELECT DISTINCT `option_name`
-				FROM $wpdb->options
-				WHERE `option_name` NOT LIKE '_transient_%'
-				AND `option_name` NOT LIKE '_site_transient_%'"
-			);
+			$export_options = $this->get_export_options();
 
-			if ( ! empty( $option_names ) ) {
-
-				/**
-				 * Filters options that are in the denylist to be exported.
-				 *
-				 * @param array The deny list options.
-				 */
-				$denylist = apply_filters( 'options_export_denylist', array() );
-
-				// Backwards compat for legacy filter name.
-				$denylist = apply_filters( 'options_export_blacklist', $denylist );
-
-				$export_options = array();
-
-				// We're going to use a random hash as our default, to know if something is set or not.
-				$hash = '048f8580e913efe41ca7d402cc51e848';
-				foreach ( $option_names as $option_name ) {
-
-					// Skip if in the deny list.
-					if ( in_array( $option_name, $denylist, true ) ) {
-						continue;
-					}
-
-					// Allow an installation to define a regular expression export denylist for security purposes. It's entirely possible
-					// that sensitive data might be installed in an option, or you may not want anyone to even know that a key exists.
-					// For instance, if you run a multsite installation, you could add in an mu-plugin:
-					// define( 'WP_OPTION_EXPORT_DENYLIST_REGEX', '/^(mailserver_(login|pass|port|url))$/' );
-					// to ensure that none of your sites could export your mailserver settings.
-					if ( defined( 'WP_OPTION_EXPORT_DENYLIST_REGEX' ) && preg_match( WP_OPTION_EXPORT_DENYLIST_REGEX, $option_name ) ) {
-						continue;
-					}
-
-					// Backwards compat for legacy constant name.
-					if ( defined( 'WP_OPTION_EXPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_EXPORT_BLACKLIST_REGEX, $option_name ) ) {
-						continue;
-					}
-
-					$option_value = get_option( $option_name, $hash );
-
-					// Only export the setting if it's present.
-					if ( $option_value !== $hash ) {
-						$export_options[ $option_name ] = maybe_serialize( $option_value );
-					}
-				}
-
-				$no_autoload = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-					"SELECT DISTINCT `option_name`
-					FROM $wpdb->options
-					WHERE `option_name` NOT LIKE '_transient_%'
-					AND `option_name` NOT LIKE '_site__transient_%'
-					AND `autoload`='no'"
-				);
-
-				if ( empty( $no_autoload ) ) {
-					$no_autoload = array();
-				}
-
+			if ( ! empty( $export_options ) ) {
 				$json_pretty_print = defined( 'JSON_PRETTY_PRINT' ) ? JSON_PRETTY_PRINT : null;
 
 				echo wp_json_encode(
 					array(
 						'version'     => self::VERSION,
 						'options'     => $export_options,
-						'no_autoload' => $no_autoload,
+						'no_autoload' => $this->get_export_options_no_autoload(),
 					),
 					$json_pretty_print
 				);
 			}
 
+			// Exit.
 			exit;
 		}
+	}
+
+	/**
+	 * Gets all of the export options and their values for the export file.
+	 *
+	 * @return array Any array of options to export.
+	 */
+	public function get_export_options() {
+		global $wpdb;
+
+		$option_names = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			"SELECT DISTINCT `option_name`
+			FROM $wpdb->options
+			WHERE `option_name` NOT LIKE '_transient_%'
+			AND `option_name` NOT LIKE '_site_transient_%'"
+		);
+
+		if ( ! empty( $option_names ) ) {
+
+			/**
+			 * Filters options that are in the denylist to be exported.
+			 *
+			 * @param array The deny list options.
+			 */
+			$denylist = apply_filters( 'options_export_denylist', array() );
+
+			// Backwards compat for legacy filter name.
+			$denylist = apply_filters( 'options_export_blacklist', $denylist );
+
+			$export_options = array();
+
+			// We're going to use a random hash as our default, to know if something is set or not.
+			$hash = '048f8580e913efe41ca7d402cc51e848';
+			foreach ( $option_names as $option_name ) {
+
+				// Skip if in the deny list.
+				if ( in_array( $option_name, $denylist, true ) ) {
+					continue;
+				}
+
+				// Allow an installation to define a regular expression export denylist for security purposes. It's entirely possible
+				// that sensitive data might be installed in an option, or you may not want anyone to even know that a key exists.
+				// For instance, if you run a multsite installation, you could add in an mu-plugin:
+				// define( 'WP_OPTION_EXPORT_DENYLIST_REGEX', '/^(mailserver_(login|pass|port|url))$/' );
+				// to ensure that none of your sites could export your mailserver settings.
+				if ( defined( 'WP_OPTION_EXPORT_DENYLIST_REGEX' ) && preg_match( WP_OPTION_EXPORT_DENYLIST_REGEX, $option_name ) ) {
+					continue;
+				}
+
+				// Backwards compat for legacy constant name.
+				if ( defined( 'WP_OPTION_EXPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_EXPORT_BLACKLIST_REGEX, $option_name ) ) {
+					continue;
+				}
+
+				$option_value = get_option( $option_name, $hash );
+
+				// Only export the setting if it's present.
+				if ( $option_value !== $hash ) {
+					$export_options[ $option_name ] = maybe_serialize( $option_value );
+				}
+			}
+
+			return $export_options;
+		}
+
+		return array();
+	}
+
+	/**
+	 * Gets all of the export option names with autoload disabled.
+	 *
+	 * @return array Array of option names that have autoload disabled.
+	 */
+	public function get_export_options_no_autoload() {
+		global $wpdb;
+
+		$no_autoload = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			"SELECT DISTINCT `option_name`
+			FROM $wpdb->options
+			WHERE `option_name` NOT LIKE '_transient_%'
+			AND `option_name` NOT LIKE '_site__transient_%'
+			AND `autoload`='no'"
+		);
+
+		if ( empty( $no_autoload ) ) {
+			$no_autoload = array();
+		}
+
+		return (array) $no_autoload;
 	}
 
 	/**

@@ -98,6 +98,10 @@ script:
       phpcs -n
     fi
 
+  # Run the plugins's unit tests, both in single and multisite.
+  - phpunit
+  - WP_MULTISITE=1 phpunit
+
 # Receive notifications for build results.
 # @link http://docs.travis-ci.com/user/notifications/#Email-notifications
 notifications:
