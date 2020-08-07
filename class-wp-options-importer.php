@@ -40,7 +40,7 @@ class WP_Options_Importer {
 	/**
 	 * The plugin version.
 	 */
-	const VERSION = 7.0;
+	const VERSION = 7;
 
 	/**
 	 * The minimum file version the importer will allow.
