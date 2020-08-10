@@ -2,8 +2,8 @@
 Contributors: mboynes,alleyinteractive
 Tags: options, importer, exporter, export, import, migrate, settings, wp_options
 Requires at least: 3.8
-Tested up to: 3.9
-Stable tag: 7
+Tested up to: 5.5
+Stable tag: 7.0.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -43,7 +43,7 @@ manually select those which you need to import.
 
 = I'm the author of [some plugin]. Can you add my settings to the default list? =
 
-No, but you can! We provide a filter, `options_import_whitelist` for you to add
+No, but you can! We provide a filter, `options_import_allowlist` for you to add
 your options to the default list. Here's an example one might add to their
 plugin:
 
@@ -51,17 +51,17 @@ plugin:
 		$options[] = 'my_awesome_plugin';
 		return $options;
 	}
-	add_filter( 'options_import_whitelist', 'my_awesome_plugin_options' );
+	add_filter( 'options_import_allowlist', 'my_awesome_plugin_options' );
 
 Similarly, if you don't want someone to ever import an option, you can add it
-to the blacklist using the `options_import_blacklist` filter. As above, it
+to the denylist using the `options_import_denylist` filter. As above, it
 would look something like this:
 
-	function my_awesome_plugin_blacklist_options( $options ) {
+	function my_awesome_plugin_denylist_options( $options ) {
 		$options[] = 'my_awesome_plugin_edit_lock';
 		return $options;
 	}
-	add_filter( 'options_import_blacklist', 'my_awesome_plugin_blacklist_options' );
+	add_filter( 'options_import_denylist', 'my_awesome_plugin_denylist_options' );
 
 = I operate a multisite network and some options should *never* be able to be exported or imported by the site owner. Can I prevent that? =
 
@@ -69,21 +69,21 @@ You have two options for both exports and imports.
 
 **Imports**
 
-First, you can use the `options_import_blacklist` filter
+First, you can use the `options_import_denylist` filter
 and add any options to that array (which is empty by default). If your users
 have access to theme or plugin code, this isn't 100% safe, because they could
-override your blacklist using the same filter. In those cases, there's an
+override your denylist using the same filter. In those cases, there's an
 emergency ripcord where you can disable options from ever being imported. To
-use this, define the constant `WP_OPTION_IMPORT_BLACKLIST_REGEX` (you'll
+use this, define the constant `WP_OPTION_IMPORT_DENYLIST_REGEX` (you'll
 probably want to do this in an mu-plugin) and set it to a regular expression.
 Anything matching this expression will be skipped. For example:
 
-	define( 'WP_OPTION_IMPORT_BLACKLIST_REGEX', '/^(home|siteurl)$/' );
+	define( 'WP_OPTION_IMPORT_DENYLIST_REGEX', '/^(home|siteurl)$/' );
 
 **Exports**
 
-Exactly the same as with imports. The filter is `options_export_blacklist`,
-and the constant is `WP_OPTION_EXPORT_BLACKLIST_REGEX`.
+Exactly the same as with imports. The filter is `options_export_denylist`,
+and the constant is `WP_OPTION_EXPORT_DENYLIST_REGEX`.
 
 
 == Screenshots ==
@@ -98,8 +98,14 @@ uncheck those which you don't want to include.
 
 == Changelog ==
 
-= 7 =
-* Use escaped variants of `_e()` and `__()`
+= 7.0.0 =
+* SECURITY: Add proper escaping to all echo functions
+* SECURITY: Add nonce checks
+* SECURITY: Sanitize option name values during import
+* ENHANCEMENT: Use wp_remote_get instead of file_get_contents
+* INFO: Deprecate the use of blacklist and whitlelist in favor of denylist and allowlist
+* INFO: Move class into new file
+* INFO: Enable phpcs against the WordPress standard
 
 = 6 =
 * Remove multisite site-specific exclusions
