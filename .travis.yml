@@ -11,6 +11,9 @@ branches:
     - master
     - /^release-v.*$/
 
+services:
+  - mysql
+
 cache:
   directories:
     - $HOME/.composer/cache
