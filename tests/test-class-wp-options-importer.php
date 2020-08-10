@@ -63,7 +63,7 @@ class WP_Options_Importer_Test extends WP_UnitTestCase {
 		$option_name = 'import_option';
 		$option_value = rand_str();
 		WP_Options_Importer::instance()->import_data['options'][ $option_name ] = $option_value;
-		WP_Options_Importer::instance()->import_data['no_autoload'] = [];
+		WP_Options_Importer::instance()->import_data['no_autoload'] = array();
 
 		// Import the option.
 		$this->assertTrue( WP_Options_Importer::instance()->import_option( $option_name, true ) );
