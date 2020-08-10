@@ -26,6 +26,37 @@ class WP_Options_Importer_Test extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Tests the different ways to import options.
+	 */
+	function test_get_options_to_import() {
+		// Stub test data.
+		$test_options = array(
+			'option_1' => rand_str(),
+			'option_2' => rand_str(),
+			'option_3' => rand_str(),
+		);
+		WP_Options_Importer::instance()->import_data['options'] = $test_options;
+
+		// All options.
+		$this->assertEquals(
+			array_keys( $test_options ),
+			array_values( WP_Options_Importer::instance()->get_options_to_import( 'all', array() ) )
+		);
+
+		// Default options.
+		$this->assertEquals(
+			array_values( WP_Options_Importer::instance()->get_allowlist_options() ),
+			array_values( WP_Options_Importer::instance()->get_options_to_import( 'default', array() ) )
+		);
+
+		// Specific options.
+		$this->assertEquals(
+			array_keys( array( 'option_1' => true, 'option_2' => true ) ),
+			array_values( WP_Options_Importer::instance()->get_options_to_import( 'specific', array( 'option_1', 'option_2' ) ) )
+		);
+	}
+
+	/**
 	 * Tests importing a single option.
 	 */
 	function test_import_option() {
