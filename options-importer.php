@@ -5,14 +5,22 @@
  * Description: Export and import WordPress Options
  * Version: 7.0.0
  * Author: Matthew Boynes
- * Author URI: http://www.alleyinteractive.com/
+ * Author URI: https://alley.co/
  *
  * @package Options_Importer
  */
 
 if ( ! class_exists( 'WP_Options_Importer' ) ) {
 	require_once dirname( __FILE__ ) . '/class-wp-options-importer.php';
-
-	// Create the singleton instance.
-	WP_Options_Importer::instance();
 }
+
+/**
+ * Creates and setups up the main singleton class instance.
+ */
+function options_import_setup_main_class() {
+	// Create and the singleton instance.
+	WP_Options_Importer::instance()->setup();
+
+	return false;
+}
+add_filter( 'plugins_loaded', 'options_import_setup_main_class' );
