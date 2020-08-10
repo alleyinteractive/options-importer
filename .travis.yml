@@ -57,8 +57,6 @@ before_script:
 
   - |
     if [[ ! -z "$WP_VERSION" ]] ; then
-      # Set up the WordPress installation.
-      export WP_CORE_DIR=/tmp/wordpress/
       bash bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
     fi
 
@@ -101,8 +99,12 @@ script:
     fi
 
   # Run the plugins's unit tests, both in single and multisite.
-  - phpunit
-  - WP_MULTISITE=1 phpunit
+  - |
+    if [[ ! -z "$WP_VERSION" ]] ; then
+      phpunit --version
+      phpunit
+      phpunit -c multisite.xml
+    fi
 
 # Receive notifications for build results.
 # @link http://docs.travis-ci.com/user/notifications/#Email-notifications
