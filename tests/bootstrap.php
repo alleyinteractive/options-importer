@@ -17,7 +17,7 @@ require_once $_tests_dir . '/includes/functions.php';
  * Setup our environment (theme, plugins).
  */
 function _manually_load_environment() {
-	require dirname( __FILE__ ) . '/../options-import.php';
+	require dirname( __FILE__ ) . '/../options-importer.php';
 }
 tests_add_filter( 'muplugins_loaded', '_manually_load_environment' );
 
