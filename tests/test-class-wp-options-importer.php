@@ -13,9 +13,6 @@ class WP_Options_Importer_Test extends WP_UnitTestCase {
 
 		$this->assertNotEmpty( $export_options );
 
-		// Perform check of an options value.
-		$this->assertEquals( serialize( array( 'options-importer/options-importer.php' ) ), $export_options['active_plugins'] );
-
 		// Set a custom option.
 		$option_value = rand_str();
 		update_option( 'custom_option', $option_value );
