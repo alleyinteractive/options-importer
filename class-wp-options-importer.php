@@ -87,7 +87,6 @@ class WP_Options_Importer {
 	public static function instance() {
 		if ( ! isset( self::$instance ) ) {
 			self::$instance = new WP_Options_Importer();
-			self::$instance->setup();
 		}
 
 		return self::$instance;
