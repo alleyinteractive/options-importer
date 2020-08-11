@@ -11,6 +11,9 @@ branches:
     - master
     - /^release-v.*$/
 
+services:
+  - mysql
+
 cache:
   directories:
     - $HOME/.composer/cache
@@ -56,6 +59,11 @@ before_script:
     esac
 
   - |
+    if [[ ! -z "$WP_VERSION" ]] ; then
+      bash bin/install-wp-tests.sh wordpress_test root '' localhost $WP_VERSION
+    fi
+
+  - |
     if [[ "$WP_TRAVISCI" == "phpcs" ]] ; then
       # Composer Install
       travis_retry composer install
@@ -91,6 +99,14 @@ script:
   - |
     if [[ "$WP_PHPCS" == "1" ]] ; then
       phpcs -n
+    fi
+
+  # Run the plugins's unit tests, both in single and multisite.
+  - |
+    if [[ ! -z "$WP_VERSION" ]] ; then
+      phpunit --version
+      phpunit
+      phpunit -c multisite.xml
     fi
 
 # Receive notifications for build results.

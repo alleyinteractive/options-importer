@@ -157,7 +157,6 @@ class WP_Options_Importer {
 	 */
 	public function export_wp( $args ) {
 		if ( ! empty( $args['options'] ) ) {
-			global $wpdb;
 
 			$sitename = sanitize_key( get_bloginfo( 'name' ) );
 			if ( ! empty( $sitename ) ) {
@@ -176,84 +175,113 @@ class WP_Options_Importer {
 			header( 'Content-Disposition: attachment; filename=' . $filename );
 			header( 'Content-Type: application/json; charset=' . get_option( 'blog_charset' ), true );
 
-			$option_names = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-				"SELECT DISTINCT `option_name`
-				FROM $wpdb->options
-				WHERE `option_name` NOT LIKE '_transient_%'
-				AND `option_name` NOT LIKE '_site_transient_%'"
-			);
+			$export_options = $this->get_export_options();
 
-			if ( ! empty( $option_names ) ) {
-
-				/**
-				 * Filters options that are in the denylist to be exported.
-				 *
-				 * @param array The deny list options.
-				 */
-				$denylist = apply_filters( 'options_export_denylist', array() );
-
-				// Backwards compat for legacy filter name.
-				$denylist = apply_filters( 'options_export_blacklist', $denylist );
-
-				$export_options = array();
-
-				// We're going to use a random hash as our default, to know if something is set or not.
-				$hash = '048f8580e913efe41ca7d402cc51e848';
-				foreach ( $option_names as $option_name ) {
-
-					// Skip if in the deny list.
-					if ( in_array( $option_name, $denylist, true ) ) {
-						continue;
-					}
-
-					// Allow an installation to define a regular expression export denylist for security purposes. It's entirely possible
-					// that sensitive data might be installed in an option, or you may not want anyone to even know that a key exists.
-					// For instance, if you run a multsite installation, you could add in an mu-plugin:
-					// define( 'WP_OPTION_EXPORT_DENYLIST_REGEX', '/^(mailserver_(login|pass|port|url))$/' );
-					// to ensure that none of your sites could export your mailserver settings.
-					if ( defined( 'WP_OPTION_EXPORT_DENYLIST_REGEX' ) && preg_match( WP_OPTION_EXPORT_DENYLIST_REGEX, $option_name ) ) {
-						continue;
-					}
-
-					// Backwards compat for legacy constant name.
-					if ( defined( 'WP_OPTION_EXPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_EXPORT_BLACKLIST_REGEX, $option_name ) ) {
-						continue;
-					}
-
-					$option_value = get_option( $option_name, $hash );
-
-					// Only export the setting if it's present.
-					if ( $option_value !== $hash ) {
-						$export_options[ $option_name ] = maybe_serialize( $option_value );
-					}
-				}
-
-				$no_autoload = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
-					"SELECT DISTINCT `option_name`
-					FROM $wpdb->options
-					WHERE `option_name` NOT LIKE '_transient_%'
-					AND `option_name` NOT LIKE '_site__transient_%'
-					AND `autoload`='no'"
-				);
-
-				if ( empty( $no_autoload ) ) {
-					$no_autoload = array();
-				}
-
+			if ( ! empty( $export_options ) ) {
 				$json_pretty_print = defined( 'JSON_PRETTY_PRINT' ) ? JSON_PRETTY_PRINT : null;
 
 				echo wp_json_encode(
 					array(
 						'version'     => self::VERSION,
 						'options'     => $export_options,
-						'no_autoload' => $no_autoload,
+						'no_autoload' => $this->get_export_options_no_autoload(),
 					),
 					$json_pretty_print
 				);
 			}
 
+			// Exit.
 			exit;
 		}
+	}
+
+	/**
+	 * Gets all of the export options and their values for the export file.
+	 *
+	 * @return array Any array of options to export.
+	 */
+	public function get_export_options() {
+		global $wpdb;
+
+		$option_names = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			"SELECT DISTINCT `option_name`
+			FROM $wpdb->options
+			WHERE `option_name` NOT LIKE '_transient_%'
+			AND `option_name` NOT LIKE '_site_transient_%'"
+		);
+
+		if ( ! empty( $option_names ) ) {
+
+			/**
+			 * Filters options that are in the denylist to be exported.
+			 *
+			 * @param array The deny list options.
+			 */
+			$denylist = apply_filters( 'options_export_denylist', array() );
+
+			// Backwards compat for legacy filter name.
+			$denylist = apply_filters( 'options_export_blacklist', $denylist );
+
+			$export_options = array();
+
+			// We're going to use a random hash as our default, to know if something is set or not.
+			$hash = '048f8580e913efe41ca7d402cc51e848';
+			foreach ( $option_names as $option_name ) {
+
+				// Skip if in the deny list.
+				if ( in_array( $option_name, $denylist, true ) ) {
+					continue;
+				}
+
+				// Allow an installation to define a regular expression export denylist for security purposes. It's entirely possible
+				// that sensitive data might be installed in an option, or you may not want anyone to even know that a key exists.
+				// For instance, if you run a multsite installation, you could add in an mu-plugin:
+				// define( 'WP_OPTION_EXPORT_DENYLIST_REGEX', '/^(mailserver_(login|pass|port|url))$/' );
+				// to ensure that none of your sites could export your mailserver settings.
+				if ( defined( 'WP_OPTION_EXPORT_DENYLIST_REGEX' ) && preg_match( WP_OPTION_EXPORT_DENYLIST_REGEX, $option_name ) ) {
+					continue;
+				}
+
+				// Backwards compat for legacy constant name.
+				if ( defined( 'WP_OPTION_EXPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_EXPORT_BLACKLIST_REGEX, $option_name ) ) {
+					continue;
+				}
+
+				$option_value = get_option( $option_name, $hash );
+
+				// Only export the setting if it's present.
+				if ( $option_value !== $hash ) {
+					$export_options[ $option_name ] = maybe_serialize( $option_value );
+				}
+			}
+
+			return $export_options;
+		}
+
+		return array();
+	}
+
+	/**
+	 * Gets all of the export option names with autoload disabled.
+	 *
+	 * @return array Array of option names that have autoload disabled.
+	 */
+	public function get_export_options_no_autoload() {
+		global $wpdb;
+
+		$no_autoload = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			"SELECT DISTINCT `option_name`
+			FROM $wpdb->options
+			WHERE `option_name` NOT LIKE '_transient_%'
+			AND `option_name` NOT LIKE '_site__transient_%'
+			AND `autoload`='no'"
+		);
+
+		if ( empty( $no_autoload ) ) {
+			$no_autoload = array();
+		}
+
+		return (array) $no_autoload;
 	}
 
 	/**
@@ -408,127 +436,13 @@ class WP_Options_Importer {
 	 *
 	 * @return array
 	 */
-	private function get_allowlist_options() {
+	public function get_allowlist_options() {
 		/**
 		 * Filters the allowed options to be imported.
 		 *
 		 * @param array The allowlist of options to be imported.
 		 */
-		$allowlist = apply_filters(
-			'options_import_allowlist',
-			array(
-				// 'active_plugins',
-				'admin_email',
-				'advanced_edit',
-				'avatar_default',
-				'avatar_rating',
-				'blacklist_keys',
-				'blogdescription',
-				'blogname',
-				'blog_charset',
-				'blog_public',
-				'blog_upload_space',
-				'category_base',
-				'category_children',
-				'close_comments_days_old',
-				'close_comments_for_old_posts',
-				'comments_notify',
-				'comments_per_page',
-				'comment_max_links',
-				'comment_moderation',
-				'comment_order',
-				'comment_registration',
-				'comment_whitelist',
-				'comment_previously_approved',
-				'cron',
-				// 'current_theme',
-				'date_format',
-				'default_category',
-				'default_comments_page',
-				'default_comment_status',
-				'default_email_category',
-				'default_link_category',
-				'default_pingback_flag',
-				'default_ping_status',
-				'default_post_format',
-				'default_role',
-				'disallowed_keys',
-				'gmt_offset',
-				'gzipcompression',
-				'hack_file',
-				'html_type',
-				'image_default_align',
-				'image_default_link_type',
-				'image_default_size',
-				'large_size_h',
-				'large_size_w',
-				'links_recently_updated_append',
-				'links_recently_updated_prepend',
-				'links_recently_updated_time',
-				'links_updated_date_format',
-				'link_manager_enabled',
-				'mailserver_login',
-				'mailserver_pass',
-				'mailserver_port',
-				'mailserver_url',
-				'medium_size_h',
-				'medium_size_w',
-				'moderation_keys',
-				'moderation_notify',
-				'ms_robotstxt',
-				'ms_robotstxt_sitemap',
-				'nav_menu_options',
-				'page_comments',
-				'page_for_posts',
-				'page_on_front',
-				'permalink_structure',
-				'ping_sites',
-				'posts_per_page',
-				'posts_per_rss',
-				'recently_activated',
-				'recently_edited',
-				'require_name_email',
-				'rss_use_excerpt',
-				'show_avatars',
-				'show_on_front',
-				'sidebars_widgets',
-				'start_of_week',
-				'sticky_posts',
-				// 'stylesheet',
-				'subscription_options',
-				'tag_base',
-				// 'template',
-				'theme_switched',
-				'thread_comments',
-				'thread_comments_depth',
-				'thumbnail_crop',
-				'thumbnail_size_h',
-				'thumbnail_size_w',
-				'timezone_string',
-				'time_format',
-				'uninstall_plugins',
-				'uploads_use_yearmonth_folders',
-				'upload_path',
-				'upload_url_path',
-				'users_can_register',
-				'use_balanceTags',
-				'use_smilies',
-				'use_trackback',
-				'widget_archives',
-				'widget_categories',
-				'widget_image',
-				'widget_meta',
-				'widget_nav_menu',
-				'widget_recent-comments',
-				'widget_recent-posts',
-				'widget_rss',
-				'widget_rss_links',
-				'widget_search',
-				'widget_text',
-				'widget_top-posts',
-				'WPLANG',
-			)
-		);
+		$allowlist = apply_filters( 'options_import_allowlist', $this->get_default_import_options() );
 
 		// Backwards compat for legacy filter name.
 		$allowlist = apply_filters( 'options_import_whitelist', $allowlist );
@@ -536,13 +450,132 @@ class WP_Options_Importer {
 		return $allowlist;
 	}
 
+	/**
+	 * Gets an array of default options to import.
+	 *
+	 * @return array An array of option names.
+	 */
+	public function get_default_import_options() {
+		return array(
+			// 'active_plugins',
+			'admin_email',
+			'advanced_edit',
+			'avatar_default',
+			'avatar_rating',
+			'blacklist_keys',
+			'blogdescription',
+			'blogname',
+			'blog_charset',
+			'blog_public',
+			'blog_upload_space',
+			'category_base',
+			'category_children',
+			'close_comments_days_old',
+			'close_comments_for_old_posts',
+			'comments_notify',
+			'comments_per_page',
+			'comment_max_links',
+			'comment_moderation',
+			'comment_order',
+			'comment_registration',
+			'comment_whitelist',
+			'comment_previously_approved',
+			'cron',
+			// 'current_theme',
+			'date_format',
+			'default_category',
+			'default_comments_page',
+			'default_comment_status',
+			'default_email_category',
+			'default_link_category',
+			'default_pingback_flag',
+			'default_ping_status',
+			'default_post_format',
+			'default_role',
+			'disallowed_keys',
+			'gmt_offset',
+			'gzipcompression',
+			'hack_file',
+			'html_type',
+			'image_default_align',
+			'image_default_link_type',
+			'image_default_size',
+			'large_size_h',
+			'large_size_w',
+			'links_recently_updated_append',
+			'links_recently_updated_prepend',
+			'links_recently_updated_time',
+			'links_updated_date_format',
+			'link_manager_enabled',
+			'mailserver_login',
+			'mailserver_pass',
+			'mailserver_port',
+			'mailserver_url',
+			'medium_size_h',
+			'medium_size_w',
+			'moderation_keys',
+			'moderation_notify',
+			'ms_robotstxt',
+			'ms_robotstxt_sitemap',
+			'nav_menu_options',
+			'page_comments',
+			'page_for_posts',
+			'page_on_front',
+			'permalink_structure',
+			'ping_sites',
+			'posts_per_page',
+			'posts_per_rss',
+			'recently_activated',
+			'recently_edited',
+			'require_name_email',
+			'rss_use_excerpt',
+			'show_avatars',
+			'show_on_front',
+			'sidebars_widgets',
+			'start_of_week',
+			'sticky_posts',
+			// 'stylesheet',
+			'subscription_options',
+			'tag_base',
+			// 'template',
+			'theme_switched',
+			'thread_comments',
+			'thread_comments_depth',
+			'thumbnail_crop',
+			'thumbnail_size_h',
+			'thumbnail_size_w',
+			'timezone_string',
+			'time_format',
+			'uninstall_plugins',
+			'uploads_use_yearmonth_folders',
+			'upload_path',
+			'upload_url_path',
+			'users_can_register',
+			'use_balanceTags',
+			'use_smilies',
+			'use_trackback',
+			'widget_archives',
+			'widget_categories',
+			'widget_image',
+			'widget_meta',
+			'widget_nav_menu',
+			'widget_recent-comments',
+			'widget_recent-posts',
+			'widget_rss',
+			'widget_rss_links',
+			'widget_search',
+			'widget_text',
+			'widget_top-posts',
+			'WPLANG',
+		);
+	}
 
 	/**
 	 * Get an array of denylist options which we never want to import.
 	 *
 	 * @return array The import denylist.
 	 */
-	private function get_denylist_options() {
+	public function get_denylist_options() {
 		/**
 		 * Filters the denylist of options to import.
 		 *
@@ -709,74 +742,34 @@ class WP_Options_Importer {
 				return;
 			}
 
-			$options_to_import = array();
+			// Determine which options to import.
+			$which_options = sanitize_text_field( wp_unslash( $_POST['settings']['which_options'] ) );
 
-			if ( 'all' === $_POST['settings']['which_options'] ) {
-				$options_to_import = array_keys( $this->import_data['options'] );
-			} elseif ( 'default' === $_POST['settings']['which_options'] ) {
-				$options_to_import = $this->get_allowlist_options();
-			} elseif ( 'specific' === $_POST['settings']['which_options'] ) {
+			// Specific options to import.
+			$specific_options = array();
+
+			if ( 'specific' === $which_options ) {
 				if ( empty( $_POST['options'] ) ) {
 					$this->error_message( esc_html__( 'There do not appear to be any options to import. Did you select any?', 'wp-options-importer' ) );
 					$this->pre_import();
 					return;
 				}
 
-				$options_to_import = array_map( 'sanitize_text_field', wp_unslash( $_POST['options'] ) );
+				$specific_options = array_map( 'sanitize_text_field', wp_unslash( $_POST['options'] ) );
 			}
 
+			// Get the options to import.
+			$options_to_import = $this->get_options_to_import( $which_options, $specific_options );
+
 			$override = ( ! empty( $_POST['settings']['override'] ) && '1' === $_POST['settings']['override'] );
-
-			$hash = '048f8580e913efe41ca7d402cc51e848';
-
-			// Allow others to prevent their options from importing.
-			$denylist = $this->get_denylist_options();
 
 			foreach ( (array) $options_to_import as $option_name ) {
 				if ( isset( $this->import_data['options'][ $option_name ] ) ) {
 
-					if ( in_array( $option_name, $denylist, true ) ) {
-						/* translators: 1. option name */
-						echo "\n<p>" . sprintf( esc_html__( 'Skipped option `%s` because a plugin or theme does not allow it to be imported.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
-						continue;
-					}
+					// Import the option.
+					$this->import_option( $option_name, $override );
 
-					// As an absolute last resort for security purposes, allow an installation to define a regular expression
-					// denylist. For instance, if you run a multsite installation, you could add in an mu-plugin:
-					// define( 'WP_OPTION_IMPORT_BLACKLIST_REGEX', '/^(home|siteurl)$/' );
-					// to ensure that none of your sites could change their own url using this tool.
-					if ( defined( 'WP_OPTION_IMPORT_DENYLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_DENYLIST_REGEX, $option_name ) ) {
-						/* translators: 1. option name */
-						echo "\n<p>" . sprintf( esc_html__( 'Skipped option `%s` because this WordPress installation does not allow it.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
-						continue;
-					}
-
-					// Backwards compat for legacy constant name.
-					if ( defined( 'WP_OPTION_IMPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_BLACKLIST_REGEX, $option_name ) ) {
-						continue;
-					}
-
-					if ( ! $override ) {
-						// We're going to use a random hash as our default, to know if something is set or not.
-						$old_value = get_option( $option_name, $hash );
-
-						// Only import the setting if it's not present.
-						if ( $old_value !== $hash ) {
-							/* translators: 1. option name */
-							echo "\n<p>" . sprintf( esc_html__( 'Skipped option `%s` because it currently exists.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
-							continue;
-						}
-					}
-
-					$option_value = maybe_unserialize( $this->import_data['options'][ $option_name ] );
-
-					if ( in_array( $option_name, $this->import_data['no_autoload'], true ) ) {
-						delete_option( $option_name );
-						add_option( $option_name, $option_value, '', 'no' );
-					} else {
-						update_option( $option_name, $option_value );
-					}
-				} elseif ( 'specific' === $_POST['settings']['which_options'] ) {
+				} elseif ( 'specific' === $which_options ) {
 					/* translators: 1. option name */
 					echo "\n<p>" . sprintf( esc_html__( 'Failed to import option `%s`; it does not appear to be in the import file.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
 				}
@@ -785,6 +778,92 @@ class WP_Options_Importer {
 			$this->clean_up();
 			echo '<p>' . esc_html__( 'All done. That was easy.', 'wp-options-importer' ) . ' <a href="' . esc_url( admin_url() ) . '">' . esc_html__( 'Have fun!', 'wp-options-importer' ) . '</a></p>';
 		}
+	}
+
+	/**
+	 * Gets the options to import.
+	 *
+	 * @param  string $which_options     Which options should be imported.
+	 * @param  array  $specific_options  An array of specific option names to import.
+	 * @return array  $options_to_import An array of option names to import.
+	 */
+	public function get_options_to_import( $which_options, $specific_options ) {
+		$options_to_import = array();
+
+		if ( 'all' === $which_options ) {
+			$options_to_import = array_keys( $this->import_data['options'] );
+		} elseif ( 'default' === $which_options ) {
+			$options_to_import = $this->get_allowlist_options();
+		} elseif ( 'specific' === $which_options ) {
+			$options_to_import = $specific_options;
+		}
+
+		return $options_to_import;
+	}
+
+	/**
+	 * Imports an option after perform checks.
+	 *
+	 * @param  string $name     The option name.
+	 * @param  bool   $override Whether or not to override the current option.
+	 * @return bool|\WP_Error   True on success, otherwise a \WP_Error object on failure.
+	 */
+	public function import_option( $name, $override ) {
+		$hash = '048f8580e913efe41ca7d402cc51e848';
+
+		// Allow others to prevent their options from importing.
+		$denylist = $this->get_denylist_options();
+
+		if ( in_array( $name, $denylist, true ) ) {
+			/* translators: 1. option name */
+			return new \WP_Error( 'skipped', sprintf( __( 'Skipped option `%s` because this WordPress installation does not allow it.', 'wp-options-importer' ), $name ) );
+		}
+
+		// As an absolute last resort for security purposes, allow an installation to define a regular expression
+		// denylist. For instance, if you run a multsite installation, you could add in an mu-plugin:
+		// define( 'WP_OPTION_IMPORT_BLACKLIST_REGEX', '/^(home|siteurl)$/' );
+		// to ensure that none of your sites could change their own url using this tool.
+		if (
+			( defined( 'WP_OPTION_IMPORT_DENYLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_DENYLIST_REGEX, $name ) )
+			|| ( defined( 'WP_OPTION_IMPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_BLACKLIST_REGEX, $name ) )
+		) {
+			/* translators: 1. option name */
+			return new \WP_Error( 'skipped', sprintf( __( 'Skipped option `%s` because this WordPress installation does not allow it.', 'wp-options-importer' ), $name ) );
+		}
+
+		if ( ! $override ) {
+			// We're going to use a random hash as our default, to know if something is set or not.
+			$old_value = get_option( $name, $hash );
+
+			// Only import the setting if it's not present.
+			if ( $old_value !== $hash ) {
+				/* translators: 1. option name */
+				return new \WP_Error( 'skipped', sprintf( __( 'Skipped option `%s` because it currently exists.', 'wp-options-importer' ), $name ) );
+			}
+		}
+
+		$option_value = maybe_unserialize( $this->import_data['options'][ $name ] );
+
+		if ( in_array( $name, $this->import_data['no_autoload'], true ) ) {
+
+			if ( false === delete_option( $name ) ) {
+				/* translators: 1. option name */
+				return new \WP_Error( 'error', sprintf( __( 'Failed deleting option `%s`.', 'wp-options-importer' ), $name ) );
+			}
+
+			if ( false === add_option( $name, $option_value, '', 'no' ) ) {
+				/* translators: 1. option name */
+				return new \WP_Error( 'error', sprintf( __( 'Failed adding option `%s`.', 'wp-options-importer' ), $name ) );
+			}
+		} else {
+
+			if ( false === update_option( $name, $option_value ) ) {
+				/* translators: 1. option name */
+				return new \WP_Error( 'error', sprintf( __( 'Failed updating option `%s`.', 'wp-options-importer' ), $name ) );
+			}
+		}
+
+		return true;
 	}
 
 	/**
