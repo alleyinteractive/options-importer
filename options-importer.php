@@ -3,7 +3,7 @@
  * Plugin Name: WP Options Importer
  * Plugin URI: https://github.com/alleyinteractive/options-importer
  * Description: Export and import WordPress Options
- * Version: 7.0.0
+ * Version: 7
  * Author: Matthew Boynes
  * Author URI: https://alley.co/
  *

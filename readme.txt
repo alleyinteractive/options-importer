@@ -3,7 +3,7 @@ Contributors: mboynes,alleyinteractive
 Tags: options, importer, exporter, export, import, migrate, settings, wp_options
 Requires at least: 3.8
 Tested up to: 5.5
-Stable tag: 7.0.0
+Stable tag: 7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -98,7 +98,7 @@ uncheck those which you don't want to include.
 
 == Changelog ==
 
-= 7.0.0 =
+= 7 =
 * SECURITY: Add proper escaping to all echo functions
 * SECURITY: Add nonce checks
 * SECURITY: Sanitize option name values during import
