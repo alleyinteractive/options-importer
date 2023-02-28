@@ -6,6 +6,7 @@
  * Version: 7
  * Author: Matthew Boynes
  * Author URI: https://alley.co/
+ * Update URI: https://github.com/alleyinteractive/options-importer
  *
  * @package Options_Importer
  */
