@@ -5,7 +5,7 @@
  * Description: Export and import WordPress Options
  * Version: 7
  * Author: Matthew Boynes
- * Author URI: https://alley.co/
+ * Author URI: https://www.alley.com/
  *
  * @package Options_Importer
  */
