@@ -6,7 +6,7 @@
  * Version: 7
  * Author: Matthew Boynes
  * Author URI: https://www.alley.com/
- *
+ * Text Domain: options-importer
  * @package Options_Importer
  */
 

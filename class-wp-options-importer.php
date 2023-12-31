@@ -109,8 +109,8 @@ class WP_Options_Importer {
 		if ( function_exists( 'register_importer' ) ) {
 			register_importer(
 				'wp-options-import',
-				esc_html__( 'Options', 'wp-options-importer' ),
-				esc_html__( 'Import wp_options from a JSON file', 'wp-options-importer' ),
+				esc_html__( 'Options', 'options-importer' ),
+				esc_html__( 'Import wp_options from a JSON file', 'options-importer' ),
 				array( $this, 'dispatch' )
 			);
 		}
@@ -123,7 +123,7 @@ class WP_Options_Importer {
 		?>
 		<p>
 			<label>
-				<input type="radio" name="content" value="options" /> <?php esc_html_e( 'Options', 'wp-options-importer' ); ?>
+				<input type="radio" name="content" value="options" /> <?php esc_html_e( 'Options', 'options-importer' ); ?>
 			</label>
 		</p>
 		<?php
@@ -306,7 +306,7 @@ class WP_Options_Importer {
 				if ( $this->handle_upload() ) {
 					$this->pre_import();
 				} else {
-					echo '<p><a href="' . esc_url( admin_url( 'admin.php?import=wp-options-import' ) ) . '">' . esc_html__( 'Return to File Upload', 'wp-options-importer' ) . '</a></p>';
+					echo '<p><a href="' . esc_url( admin_url( 'admin.php?import=wp-options-import' ) ) . '">' . esc_html__( 'Return to File Upload', 'options-importer' ) . '</a></p>';
 				}
 
 				break;
@@ -331,7 +331,7 @@ class WP_Options_Importer {
 	 */
 	private function header() {
 		echo '<div class="wrap">';
-		echo '<h2>' . esc_html__( 'Import WordPress Options', 'wp-options-importer' ) . '</h2>';
+		echo '<h2>' . esc_html__( 'Import WordPress Options', 'options-importer' ) . '</h2>';
 	}
 
 	/**
@@ -346,8 +346,8 @@ class WP_Options_Importer {
 	 */
 	private function greet() {
 		echo '<div class="narrow">';
-		echo '<p>' . esc_html__( 'Howdy! Upload your WordPress options JSON file and we&#8217;ll import the desired data. You&#8217;ll have a chance to review the data prior to import.', 'wp-options-importer' ) . '</p>';
-		echo '<p>' . esc_html__( 'Choose a JSON (.json) file to upload, then click Upload file and import.', 'wp-options-importer' ) . '</p>';
+		echo '<p>' . esc_html__( 'Howdy! Upload your WordPress options JSON file and we&#8217;ll import the desired data. You&#8217;ll have a chance to review the data prior to import.', 'options-importer' ) . '</p>';
+		echo '<p>' . esc_html__( 'Choose a JSON (.json) file to upload, then click Upload file and import.', 'options-importer' ) . '</p>';
 		wp_import_upload_form( 'admin.php?import=wp-options-import&amp;step=1' );
 		echo '</div>';
 	}
@@ -364,15 +364,15 @@ class WP_Options_Importer {
 
 		if ( isset( $file['error'] ) ) {
 			return $this->error_message(
-				esc_html__( 'Sorry, there has been an error.', 'wp-options-importer' ),
+				esc_html__( 'Sorry, there has been an error.', 'options-importer' ),
 				esc_html( $file['error'] )
 			);
 		}
 
 		if ( ! isset( $file['file'], $file['id'] ) ) {
 			return $this->error_message(
-				esc_html__( 'Sorry, there has been an error.', 'wp-options-importer' ),
-				esc_html__( 'The file did not upload properly. Please try again.', 'wp-options-importer' )
+				esc_html__( 'Sorry, there has been an error.', 'options-importer' ),
+				esc_html__( 'The file did not upload properly. Please try again.', 'options-importer' )
 			);
 		}
 
@@ -381,9 +381,9 @@ class WP_Options_Importer {
 		if ( ! file_exists( $file['file'] ) ) {
 			wp_import_cleanup( $this->file_id );
 			return $this->error_message(
-				esc_html__( 'Sorry, there has been an error.', 'wp-options-importer' ),
+				esc_html__( 'Sorry, there has been an error.', 'options-importer' ),
 				/* translators: 1. filename */
-				sprintf( esc_html__( 'The export file could not be found at <code>%s</code>. It is likely that this was caused by a permissions problem.', 'wp-options-importer' ), esc_html( $file['file'] ) )
+				sprintf( esc_html__( 'The export file could not be found at <code>%s</code>. It is likely that this was caused by a permissions problem.', 'options-importer' ), esc_html( $file['file'] ) )
 			);
 		}
 
@@ -654,26 +654,26 @@ class WP_Options_Importer {
 			<?php wp_nonce_field( 'import-wordpress-options' ); ?>
 			<input type="hidden" name="import_id" value="<?php echo absint( $this->file_id ); ?>" />
 
-			<h3><?php esc_html_e( 'What would you like to import?', 'wp-options-importer' ); ?></h3>
+			<h3><?php esc_html_e( 'What would you like to import?', 'options-importer' ); ?></h3>
 			<p>
-				<label><input type="radio" class="which-options" name="settings[which_options]" value="default" checked="checked" /> <?php esc_html_e( 'Default Options' ); ?></label>
-				<br /><label><input type="radio" class="which-options" name="settings[which_options]" value="all" /> <?php esc_html_e( 'All Options' ); ?></label>
-				<br /><label><input type="radio" class="which-options" name="settings[which_options]" value="specific" /> <?php esc_html_e( 'Specific Options' ); ?></label>
+				<label><input type="radio" class="which-options" name="settings[which_options]" value="default" checked="checked" /> <?php esc_html_e( 'Default Options', 'options-importer' ); ?></label>
+				<br /><label><input type="radio" class="which-options" name="settings[which_options]" value="all" /> <?php esc_html_e( 'All Options', 'options-importer' ); ?></label>
+				<br /><label><input type="radio" class="which-options" name="settings[which_options]" value="specific" /> <?php esc_html_e( 'Specific Options', 'options-importer' ); ?></label>
 			</p>
 
 			<div id="option_importer_details">
-				<h3><?php esc_html_e( 'Select the options to import', 'wp-options-importer' ); ?></h3>
+				<h3><?php esc_html_e( 'Select the options to import', 'options-importer' ); ?></h3>
 				<p>
-					<a href="#" class="options-bulk-select" data-select="all"><?php esc_html_e( 'Select All', 'wp-options-importer' ); ?></a>
-					| <a href="#" class="options-bulk-select" data-select="none"><?php esc_html_e( 'Select None', 'wp-options-importer' ); ?></a>
-					| <a href="#" class="options-bulk-select" data-select="defaults"><?php esc_html_e( 'Select Defaults', 'wp-options-importer' ); ?></a>
+					<a href="#" class="options-bulk-select" data-select="all"><?php esc_html_e( 'Select All', 'options-importer' ); ?></a>
+					| <a href="#" class="options-bulk-select" data-select="none"><?php esc_html_e( 'Select None', 'options-importer' ); ?></a>
+					| <a href="#" class="options-bulk-select" data-select="defaults"><?php esc_html_e( 'Select Defaults', 'options-importer' ); ?></a>
 				</p>
 				<table id="importing_options">
 					<thead>
 						<tr>
 							<th>&nbsp;</th>
-							<th><?php esc_html_e( 'Option Name', 'wp-options-importer' ); ?></th>
-							<th><?php esc_html_e( 'New Value', 'wp-options-importer' ); ?></th>
+							<th><?php esc_html_e( 'Option Name', 'options-importer' ); ?></th>
+							<th><?php esc_html_e( 'New Value', 'options-importer' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -698,11 +698,11 @@ class WP_Options_Importer {
 								<td><input type="checkbox" name="options[]" value="<?php echo esc_attr( $option_name ); ?>" <?php checked( in_array( $option_name, $allowlist, true ) ); ?> /></td>
 								<td><?php echo esc_html( $option_name ); ?></td>
 								<?php if ( null === $option_value ) : ?>
-									<td><em><?php esc_html_e( 'null', 'wp-options-importer' ); ?></em></td>
+									<td><em><?php esc_html_e( 'null', 'options-importer' ); ?></em></td>
 								<?php elseif ( '' === $option_value ) : ?>
-									<td><em><?php esc_html_e( 'empty string', 'wp-options-importer' ); ?></em></td>
+									<td><em><?php esc_html_e( 'empty string', 'options-importer' ); ?></em></td>
 								<?php elseif ( false === $option_value ) : ?>
-									<td><em><?php esc_html_e( 'false', 'wp-options-importer' ); ?></em></td>
+									<td><em><?php esc_html_e( 'false', 'options-importer' ); ?></em></td>
 								<?php else : ?>
 									<td><pre><?php echo esc_html( $option_value ); ?></pre></td>
 								<?php endif ?>
@@ -712,18 +712,18 @@ class WP_Options_Importer {
 				</table>
 			</div>
 
-			<h3><?php esc_html_e( 'Additional Settings', 'wp-options-importer' ); ?></h3>
+			<h3><?php esc_html_e( 'Additional Settings', 'options-importer' ); ?></h3>
 			<p>
 				<input type="checkbox" value="1" name="settings[override]" id="override_current" checked="checked" />
-				<label for="override_current"><?php esc_html_e( 'Override existing options', 'wp-options-importer' ); ?></label>
+				<label for="override_current"><?php esc_html_e( 'Override existing options', 'options-importer' ); ?></label>
 			</p>
-			<p class="description"><?php esc_html_e( 'If you uncheck this box, options will be skipped if they currently exist.', 'wp-options-importer' ); ?></p>
+			<p class="description"><?php esc_html_e( 'If you uncheck this box, options will be skipped if they currently exist.', 'options-importer' ); ?></p>
 
 			<div class="error inline" id="import_all_warning">
-				<p class="description"><?php esc_html_e( 'Caution! Importing all options with the override option set could break this site. For instance, it may change the site URL, the active theme, and active plugins. Only proceed if you know exactly what you&#8217;re doing.', 'wp-options-importer' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Caution! Importing all options with the override option set could break this site. For instance, it may change the site URL, the active theme, and active plugins. Only proceed if you know exactly what you&#8217;re doing.', 'options-importer' ); ?></p>
 			</div>
 
-			<?php submit_button( esc_html__( 'Import Selected Options', 'wp-options-importer' ) ); ?>
+			<?php submit_button( esc_html__( 'Import Selected Options', 'options-importer' ) ); ?>
 		</form>
 		<?php
 	}
@@ -737,7 +737,7 @@ class WP_Options_Importer {
 
 		if ( $this->run_data_check() ) {
 			if ( empty( $_POST['settings']['which_options'] ) ) {
-				$this->error_message( esc_html__( 'The posted data does not appear intact. Please try again.', 'wp-options-importer' ) );
+				$this->error_message( esc_html__( 'The posted data does not appear intact. Please try again.', 'options-importer' ) );
 				$this->pre_import();
 				return;
 			}
@@ -750,7 +750,7 @@ class WP_Options_Importer {
 
 			if ( 'specific' === $which_options ) {
 				if ( empty( $_POST['options'] ) ) {
-					$this->error_message( esc_html__( 'There do not appear to be any options to import. Did you select any?', 'wp-options-importer' ) );
+					$this->error_message( esc_html__( 'There do not appear to be any options to import. Did you select any?', 'options-importer' ) );
 					$this->pre_import();
 					return;
 				}
@@ -771,12 +771,12 @@ class WP_Options_Importer {
 
 				} elseif ( 'specific' === $which_options ) {
 					/* translators: 1. option name */
-					echo "\n<p>" . sprintf( esc_html__( 'Failed to import option `%s`; it does not appear to be in the import file.', 'wp-options-importer' ), esc_html( $option_name ) ) . '</p>';
+					echo "\n<p>" . sprintf( esc_html__( 'Failed to import option `%s`; it does not appear to be in the import file.', 'options-importer' ), esc_html( $option_name ) ) . '</p>';
 				}
 			}
 
 			$this->clean_up();
-			echo '<p>' . esc_html__( 'All done. That was easy.', 'wp-options-importer' ) . ' <a href="' . esc_url( admin_url() ) . '">' . esc_html__( 'Have fun!', 'wp-options-importer' ) . '</a></p>';
+			echo '<p>' . esc_html__( 'All done. That was easy.', 'options-importer' ) . ' <a href="' . esc_url( admin_url() ) . '">' . esc_html__( 'Have fun!', 'options-importer' ) . '</a></p>';
 		}
 	}
 
@@ -816,7 +816,7 @@ class WP_Options_Importer {
 
 		if ( in_array( $name, $denylist, true ) ) {
 			/* translators: 1. option name */
-			return new \WP_Error( 'skipped', sprintf( __( 'Skipped option `%s` because this WordPress installation does not allow it.', 'wp-options-importer' ), $name ) );
+			return new \WP_Error( 'skipped', sprintf( __( 'Skipped option `%s` because this WordPress installation does not allow it.', 'options-importer' ), $name ) );
 		}
 
 		// As an absolute last resort for security purposes, allow an installation to define a regular expression
@@ -828,7 +828,7 @@ class WP_Options_Importer {
 			|| ( defined( 'WP_OPTION_IMPORT_BLACKLIST_REGEX' ) && preg_match( WP_OPTION_IMPORT_BLACKLIST_REGEX, $name ) )
 		) {
 			/* translators: 1. option name */
-			return new \WP_Error( 'skipped', sprintf( __( 'Skipped option `%s` because this WordPress installation does not allow it.', 'wp-options-importer' ), $name ) );
+			return new \WP_Error( 'skipped', sprintf( __( 'Skipped option `%s` because this WordPress installation does not allow it.', 'options-importer' ), $name ) );
 		}
 
 		if ( ! $override ) {
@@ -838,7 +838,7 @@ class WP_Options_Importer {
 			// Only import the setting if it's not present.
 			if ( $old_value !== $hash ) {
 				/* translators: 1. option name */
-				return new \WP_Error( 'skipped', sprintf( __( 'Skipped option `%s` because it currently exists.', 'wp-options-importer' ), $name ) );
+				return new \WP_Error( 'skipped', sprintf( __( 'Skipped option `%s` because it currently exists.', 'options-importer' ), $name ) );
 			}
 		}
 
@@ -848,18 +848,18 @@ class WP_Options_Importer {
 
 			if ( false === delete_option( $name ) ) {
 				/* translators: 1. option name */
-				return new \WP_Error( 'error', sprintf( __( 'Failed deleting option `%s`.', 'wp-options-importer' ), $name ) );
+				return new \WP_Error( 'error', sprintf( __( 'Failed deleting option `%s`.', 'options-importer' ), $name ) );
 			}
 
 			if ( false === add_option( $name, $option_value, '', 'no' ) ) {
 				/* translators: 1. option name */
-				return new \WP_Error( 'error', sprintf( __( 'Failed adding option `%s`.', 'wp-options-importer' ), $name ) );
+				return new \WP_Error( 'error', sprintf( __( 'Failed adding option `%s`.', 'options-importer' ), $name ) );
 			}
 		} else {
 
 			if ( false === update_option( $name, $option_value ) ) {
 				/* translators: 1. option name */
-				return new \WP_Error( 'error', sprintf( __( 'Failed updating option `%s`.', 'wp-options-importer' ), $name ) );
+				return new \WP_Error( 'error', sprintf( __( 'Failed updating option `%s`.', 'options-importer' ), $name ) );
 			}
 		}
 
@@ -874,24 +874,24 @@ class WP_Options_Importer {
 	private function run_data_check() {
 		if ( empty( $this->import_data['version'] ) ) {
 			$this->clean_up();
-			return $this->error_message( esc_html__( 'Sorry, there has been an error. This file may not contain data or is corrupt.', 'wp-options-importer' ) );
+			return $this->error_message( esc_html__( 'Sorry, there has been an error. This file may not contain data or is corrupt.', 'options-importer' ) );
 		}
 
 		if ( $this->import_data['version'] < $this->min_version ) {
 			$this->clean_up();
 			/* translators: 1. file version */
-			return $this->error_message( sprintf( esc_html__( 'This JSON file (version %s) is not supported by this version of the importer. Please update the plugin on the source, or download an older version of the plugin to this installation.', 'wp-options-importer' ), intval( $this->import_data['version'] ) ) );
+			return $this->error_message( sprintf( esc_html__( 'This JSON file (version %s) is not supported by this version of the importer. Please update the plugin on the source, or download an older version of the plugin to this installation.', 'options-importer' ), intval( $this->import_data['version'] ) ) );
 		}
 
 		if ( $this->import_data['version'] > self::VERSION ) {
 			$this->clean_up();
 			/* translators: 1. file version */
-			return $this->error_message( sprintf( esc_html__( 'This JSON file (version %s) is from a newer version of this plugin and may not be compatible. Please update this plugin.', 'wp-options-importer' ), intval( $this->import_data['version'] ) ) );
+			return $this->error_message( sprintf( esc_html__( 'This JSON file (version %s) is from a newer version of this plugin and may not be compatible. Please update this plugin.', 'options-importer' ), intval( $this->import_data['version'] ) ) );
 		}
 
 		if ( empty( $this->import_data['options'] ) ) {
 			$this->clean_up();
-			return $this->error_message( esc_html__( 'Sorry, there has been an error. This file appears valid, but does not seem to have any options.', 'wp-options-importer' ) );
+			return $this->error_message( esc_html__( 'Sorry, there has been an error. This file appears valid, but does not seem to have any options.', 'options-importer' ) );
 		}
 
 		return true;
